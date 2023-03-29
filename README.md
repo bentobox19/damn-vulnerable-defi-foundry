@@ -1,4 +1,4 @@
-# ethernaut-foundry
+# damn-vulnerable-defi-foundry
 
 * Porting in [foundry-rs](https://github.com/foundry-rs/foundry) of the solutions for [The Damn Vulnerable DeFi CTF](https://www.damnvulnerabledefi.xyz/).
 
