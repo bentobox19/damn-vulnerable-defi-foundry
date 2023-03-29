@@ -3,14 +3,16 @@ pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
 // utils has setup() and validate() of this level
-// import "../../src/<level>/_utils.sol";
+// import "../../src/<level>/<LevelName>Level.sol";
 
 contract LevelTest is Test {
+  // <LevelName>Level level = new <LevelName>Level();
+
   function setUp() public {
-    // utils.setup()
+    // level.setup()
   }
 
   function _testExploit() public {
-    // utils.validate()
+    // level.validate()
   }
 }

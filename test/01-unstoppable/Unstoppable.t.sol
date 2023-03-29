@@ -2,15 +2,16 @@
 pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
-// utils has setup() and validate() of this level
-// import "../../src/<level>/_utils.sol";
+import "../../src/unstoppable/UnstoppableLevel.sol";
 
 contract UnstoppableTest is Test {
+  UnstoppableLevel level = new UnstoppableLevel();
+
   function setUp() public {
-    // utils.setup()
+    level.setup();
   }
 
   function testExploit() public {
-    // utils.validate()
+    level.validate();
   }
 }
