@@ -2,26 +2,33 @@
 pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
-// import "forge-std/Vm.sol";
+import "forge-std/Vm.sol";
 
 import "./UnstoppableVault.sol";
 import "./ReceiverUnstoppable.sol";
 import "../DamnValuableToken.sol";
 
 contract UnstoppableLevel is StdAssertions {
+  Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+  address payable private constant deployer = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
+  address payable private constant someUser = payable(address(uint160(uint256(keccak256(abi.encodePacked("someUser"))))));
+
   uint256 internal constant TOKENS_IN_VAULT = 1_000_000e18;
-  uint256 internal constant INITIAL_ATTACKER_TOKEN_BALANCE = 100e18;
+  uint256 internal constant INITIAL_PLAYER_TOKEN_BALANCE = 100e18;
 
   DamnValuableToken internal token;
   UnstoppableVault internal vault;
+  ReceiverUnstoppable internal receiverContract;
 
   function setup() external {
+    vm.startPrank(deployer);
+
     token = new DamnValuableToken();
-    vault = new UnstoppableVault(token, msg.sender, msg.sender);
+    vault = new UnstoppableVault(token, deployer, deployer);
     assertEq(address(vault.asset()), address(token));
 
     token.approve(address(vault), TOKENS_IN_VAULT);
-    vault.deposit(TOKENS_IN_VAULT, msg.sender);
+    vault.deposit(TOKENS_IN_VAULT, deployer);
     assertEq(token.balanceOf(address(vault)), TOKENS_IN_VAULT);
     assertEq(vault.totalAssets(), TOKENS_IN_VAULT);
     assertEq(vault.totalSupply(), TOKENS_IN_VAULT);
@@ -29,24 +36,26 @@ contract UnstoppableLevel is StdAssertions {
     assertEq(vault.flashFee(address(token), TOKENS_IN_VAULT - 1), 0);
     assertEq(vault.flashFee(address(token), TOKENS_IN_VAULT), 50_000e18);
 
+    token.transfer(msg.sender, INITIAL_PLAYER_TOKEN_BALANCE);
+    assertEq(token.balanceOf(msg.sender), INITIAL_PLAYER_TOKEN_BALANCE);
 
-    /*
+    vm.stopPrank();
 
-    // we have to create a player, different from the deployer
+    // show it's possible for someUser to take out a flash loan
+    vm.startPrank(someUser);
 
-    await token.transfer(player.address, INITIAL_PLAYER_TOKEN_BALANCE);
-    expect(await token.balanceOf(player.address)).to.eq(INITIAL_PLAYER_TOKEN_BALANCE);
+    receiverContract = new ReceiverUnstoppable(address(vault));
+    receiverContract.executeFlashLoan(100e18);
 
-    // Show it's possible for someUser to take out a flash loan
-    receiverContract = await (await ethers.getContractFactory('ReceiverUnstoppable', someUser)).deploy(
-        vault.address
-    );
-    await receiverContract.executeFlashLoan(100n * 10n ** 18n);
-
-    */
-  }
+    vm.stopPrank();
+   }
 
   function validate() external {
-    // ???
+    vm.startPrank(someUser);
+
+    vm.expectRevert();
+    receiverContract.executeFlashLoan(100e18);
+
+    vm.stopPrank();
   }
 }
