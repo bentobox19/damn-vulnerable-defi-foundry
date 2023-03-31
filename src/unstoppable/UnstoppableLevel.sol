@@ -14,7 +14,7 @@ contract UnstoppableLevel is StdAssertions {
   address payable private constant someUser = payable(address(uint160(uint256(keccak256(abi.encodePacked("someUser"))))));
 
   uint256 internal constant TOKENS_IN_VAULT = 1_000_000e18;
-  uint256 internal constant INITIAL_PLAYER_TOKEN_BALANCE = 100e18;
+  uint256 internal constant INITIAL_PLAYER_TOKEN_BALANCE = 10e18;
 
   DamnValuableToken internal token;
   UnstoppableVault internal vault;
