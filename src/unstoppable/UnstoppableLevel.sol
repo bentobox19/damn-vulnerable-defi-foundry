@@ -16,8 +16,8 @@ contract UnstoppableLevel is StdAssertions {
   uint256 internal constant TOKENS_IN_VAULT = 1_000_000e18;
   uint256 internal constant INITIAL_PLAYER_TOKEN_BALANCE = 10e18;
 
-  DamnValuableToken internal token;
-  UnstoppableVault internal vault;
+  DamnValuableToken public token;
+  UnstoppableVault public vault;
   ReceiverUnstoppable internal receiverContract;
 
   function setup() external {
