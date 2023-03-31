@@ -5,8 +5,7 @@ import "forge-std/Test.sol";
 import "../../src/unstoppable/UnstoppableLevel.sol";
 
 contract UnstoppableTest is Test {
-  UnstoppableLevel level = new UnstoppableLevel();
-
+  UnstoppableLevel internal level = new UnstoppableLevel();
 
   function setUp() public {
     level.setup();
