@@ -3,6 +3,7 @@
 <!-- MarkdownTOC levels="1,2" autolink="true" -->
 
 - [01 Unstoppable](#01-unstoppable)
+- [02 Naive Receiver](#02-naive-receiver)
 
 <!-- /MarkdownTOC -->
 
@@ -86,3 +87,19 @@ By transfering a single `DVT` token, the values checked at the guard will be dif
 * https://eips.ethereum.org/EIPS/eip-4626
 * https://ethereum.org/es/developers/docs/standards/tokens/erc-4626/
 * https://eips.ethereum.org/EIPS/eip-3156
+
+## 02 Naive Receiver
+
+To beat this level, we need to comply with
+
+```solidity
+
+```
+
+### Solution
+
+???
+
+### References
+
+* ???
