@@ -10,7 +10,6 @@ import "./FlashLoanReceiver.sol";
 contract NaiveReceiverLevel is StdAssertions {
   Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
   address payable private constant deployer = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
-  address payable private constant someUser = payable(address(uint160(uint256(keccak256(abi.encodePacked("user"))))));
 
   uint256 internal constant ETHER_IN_POOL = 1_000e18;
   uint256 internal constant ETHER_IN_RECEIVER = 10e18;

@@ -4,6 +4,7 @@
 
 - [01 Unstoppable](#01-unstoppable)
 - [02 Naive Receiver](#02-naive-receiver)
+- [03 Truster](#03-truster)
 
 <!-- /MarkdownTOC -->
 
@@ -143,3 +144,21 @@ for (uint8 i = 0; i < 10; i++) {
 ### References
 
 * https://eips.ethereum.org/EIPS/eip-3156
+
+## 03 Truster
+
+To beat this level, we need to comply with
+
+```solidity
+// did we drain the pool?
+assertEq(token.balanceOf(msg.sender), TOKENS_IN_POOL);
+assertEq(token.balanceOf(address(pool)), 0);
+```
+
+### Solution
+
+???
+
+### Reference
+
+* ????
