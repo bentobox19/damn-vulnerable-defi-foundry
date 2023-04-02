@@ -161,4 +161,5 @@ assertEq(token.balanceOf(address(pool)), 0);
 
 ### Reference
 
-* ????
+* https://docs.openzeppelin.com/contracts/4.x/api/utils#Address-functionCall-address-bytes-
+* https://eips.ethereum.org/EIPS/eip-3156
