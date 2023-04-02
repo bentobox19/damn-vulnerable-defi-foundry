@@ -15,8 +15,8 @@ contract NaiveReceiverLevel is StdAssertions {
   uint256 internal constant ETHER_IN_POOL = 1_000e18;
   uint256 internal constant ETHER_IN_RECEIVER = 10e18;
 
-  NaiveReceiverLenderPool internal pool;
-  FlashLoanReceiver internal receiver;
+  NaiveReceiverLenderPool public pool;
+  FlashLoanReceiver public receiver;
 
   function setup() external {
     vm.startPrank(deployer);
