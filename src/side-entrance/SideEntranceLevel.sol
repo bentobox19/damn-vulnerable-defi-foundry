@@ -13,7 +13,7 @@ contract SideEntranceLevel is StdAssertions {
   uint256 internal constant ETHER_IN_POOL = 1_000e18;
   uint256 internal constant PLAYER_INITIAL_ETH_BALANCE = 1e18;
 
-  SideEntranceLenderPool internal pool;
+  SideEntranceLenderPool public pool;
 
   function setup() external {
     vm.startPrank(deployer);
