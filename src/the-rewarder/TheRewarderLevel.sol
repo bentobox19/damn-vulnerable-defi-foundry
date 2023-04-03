@@ -13,13 +13,17 @@ import "../DamnValuableToken.sol";
 contract TheRewarderLevel is StdAssertions {
   Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
   address payable private constant deployer = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
+  address payable private constant alice = payable(address(uint160(uint256(keccak256(abi.encodePacked("alice"))))));
+  address payable private constant bob = payable(address(uint160(uint256(keccak256(abi.encodePacked("bob"))))));
+  address payable private constant charlie = payable(address(uint160(uint256(keccak256(abi.encodePacked("charlie"))))));
+  address payable private constant david = payable(address(uint160(uint256(keccak256(abi.encodePacked("david"))))));
 
   uint256 internal constant TOKENS_IN_LENDER_POOL = 1_000_000e18;
 
   DamnValuableToken internal liquidityToken;
   FlashLoanerPool internal flashLoanPool;
   TheRewarderPool internal rewarderPool;
-  RewardToken internal rewarderToken;
+  RewardToken internal rewardToken;
   AccountingToken internal accountingToken;
 
   function setup() external {
@@ -32,69 +36,75 @@ contract TheRewarderLevel is StdAssertions {
     liquidityToken.transfer(address(flashLoanPool), TOKENS_IN_LENDER_POOL);
 
     rewarderPool = new TheRewarderPool(address(liquidityToken));
-    rewarderToken = rewarderPool.rewardToken();
+    rewardToken = rewarderPool.rewardToken();
     accountingToken = rewarderPool.accountingToken();
 
     // Check roles in accounting token
     assertEq(accountingToken.owner(), address(rewarderPool));
+    assertTrue(accountingToken.hasAllRoles(
+      address(rewarderPool),
+      accountingToken.MINTER_ROLE() |
+      accountingToken.SNAPSHOT_ROLE() |
+      accountingToken.BURNER_ROLE()
+    ));
 
     vm.stopPrank();
 
-    /*
-        [deployer, alice, bob, charlie, david, player] = await ethers.getSigners();
-        users = [alice, bob, charlie, david];
+    // alice, bob, charlie and david deposit tokens
+    address payable[4] memory users = [alice, bob, charlie, david];
+    uint256 depositAmount = 100e18;
 
+    for (uint8 i = 0; i < users.length; i++) {
+      vm.startPrank(deployer);
+      liquidityToken.transfer(address(users[i]), depositAmount);
+      vm.stopPrank();
 
+      vm.startPrank(users[i]);
+      liquidityToken.approve(address(rewarderPool), depositAmount);
+      rewarderPool.deposit(depositAmount);
+      vm.stopPrank();
+    }
 
+    assertEq(accountingToken.totalSupply(), depositAmount * users.length);
+    assertEq(rewardToken.totalSupply(), 0);
 
-        expect(await accountingToken.owner()).to.eq(rewarderPool.address);
-        const minterRole = await accountingToken.MINTER_ROLE();
-        const snapshotRole = await accountingToken.SNAPSHOT_ROLE();
-        const burnerRole = await accountingToken.BURNER_ROLE();
-        expect(await accountingToken.hasAllRoles(rewarderPool.address, minterRole | snapshotRole | burnerRole)).to.be.true;
+    // advance time 5 days so that depositors can get rewards
+    vm.warp(block.timestamp + 5 days);
 
-        // Alice, Bob, Charlie and David deposit tokens
-        let depositAmount = 100n * 10n ** 18n;
-        for (let i = 0; i < users.length; i++) {
-            await liquidityToken.transfer(users[i].address, depositAmount);
-            await liquidityToken.connect(users[i]).approve(rewarderPool.address, depositAmount);
-            await rewarderPool.connect(users[i]).deposit(depositAmount);
-            expect(
-                await accountingToken.balanceOf(users[i].address)
-            ).to.be.eq(depositAmount);
-        }
-        expect(await accountingToken.totalSupply()).to.be.eq(depositAmount * BigInt(users.length));
-        expect(await rewardToken.totalSupply()).to.be.eq(0);
+    // each depositor gets reward tokens
+    uint256 rewardsInRound = rewarderPool.REWARDS();
+    for (uint8 i = 0; i < users.length; i++) {
+      vm.startPrank(users[i]);
+      rewarderPool.distributeRewards();
+      assertEq(rewardToken.balanceOf(address(users[i])), rewardsInRound / users.length);
+      vm.stopPrank();
+    }
 
-        // Advance time 5 days so that depositors can get rewards
-        await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]); // 5 days
+    assertEq(rewardToken.totalSupply(), rewardsInRound);
 
-        // Each depositor gets reward tokens
-        let rewardsInRound = await rewarderPool.REWARDS();
-        for (let i = 0; i < users.length; i++) {
-            await rewarderPool.connect(users[i]).distributeRewards();
-            expect(
-                await rewardToken.balanceOf(users[i].address)
-            ).to.be.eq(rewardsInRound.div(users.length));
-        }
-        expect(await rewardToken.totalSupply()).to.be.eq(rewardsInRound);
+    // player starts with zero DVT tokens in balance
+    assertEq(liquidityToken.balanceOf(msg.sender), 0);
 
-        // Player starts with zero DVT tokens in balance
-        expect(await liquidityToken.balanceOf(player.address)).to.eq(0);
-
-        // Two rounds must have occurred so far
-        expect(await rewarderPool.roundNumber()).to.be.eq(2);
-    */
+    // two rounds must have occurred so far
+    assertEq(rewarderPool.roundNumber(), 2);
   }
 
   function validate() external {
-    // ???
+    assertEq(rewarderPool.roundNumber(), 3);
+
+    // Users should get neglegible rewards this round
+    // ?
+
+    // Rewards must have been issued to the player account
+    // ?
+
+    // The amount of rewards earned should be close to total available amount
+    // ?
+
+    // Balance of DVT tokens in player and lending pool hasn't changed
+    // ?
 
     /*
-       expect(
-            await rewarderPool.roundNumber()
-        ).to.be.eq(3);
-
         // Users should get neglegible rewards this round
         for (let i = 0; i < users.length; i++) {
             await rewarderPool.connect(users[i]).distributeRewards();
