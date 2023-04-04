@@ -17,46 +17,28 @@ contract SelfieLevel is StdAssertions {
   SelfiePool pool;
 
   function setup() external {
+    vm.startPrank(deployer);
 
+    token = new DamnValuableTokenSnapshot(TOKEN_INITIAL_SUPPLY);
 
-/*
-        [deployer, player] = await ethers.getSigners();
+    governance = new SimpleGovernance(address(token));
+    assertEq(governance.getActionCounter(), 1);
 
-        // Deploy Damn Valuable Token Snapshot
-        token = await (await ethers.getContractFactory('DamnValuableTokenSnapshot', deployer)).deploy(TOKEN_INITIAL_SUPPLY);
+    pool = new SelfiePool(address(token), address(governance));
+    assertEq(address(pool.token()), address(token));
+    assertEq(address(pool.governance()), address(governance));
 
-        // Deploy governance contract
-        governance = await (await ethers.getContractFactory('SimpleGovernance', deployer)).deploy(token.address);
-        expect(await governance.getActionCounter()).to.eq(1);
+    token.transfer(address(pool), TOKENS_IN_POOL);
+    token.snapshot();
+    assertEq(token.balanceOf(address(pool)), TOKENS_IN_POOL);
+    assertEq(pool.maxFlashLoan(address(token)), TOKENS_IN_POOL);
+    assertEq(pool.flashFee(address(token), 0), 0);
 
-        // Deploy the pool
-        pool = await (await ethers.getContractFactory('SelfiePool', deployer)).deploy(
-            token.address,
-            governance.address
-        );
-        expect(await pool.token()).to.eq(token.address);
-        expect(await pool.governance()).to.eq(governance.address);
-
-        // Fund the pool
-        await token.transfer(pool.address, TOKENS_IN_POOL);
-        await token.snapshot();
-        expect(await token.balanceOf(pool.address)).to.be.equal(TOKENS_IN_POOL);
-        expect(await pool.maxFlashLoan(token.address)).to.eq(TOKENS_IN_POOL);
-        expect(await pool.flashFee(token.address, 0)).to.eq(0);
-*/
+    vm.stopPrank();
   }
 
   function validate() external {
-
-
-/*
-        // Player has taken all tokens from the pool
-        expect(
-            await token.balanceOf(player.address)
-        ).to.be.equal(TOKENS_IN_POOL);
-        expect(
-            await token.balanceOf(pool.address)
-        ).to.be.equal(0);
-*/
+    assertEq(token.balanceOf(msg.sender), TOKENS_IN_POOL);
+    assertEq(token.balanceOf(address(pool)), 0);
   }
 }
