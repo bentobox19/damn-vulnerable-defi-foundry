@@ -22,7 +22,7 @@ contract TheRewarderLevel is StdAssertions {
   DamnValuableToken public liquidityToken;
   FlashLoanerPool public flashLoanPool;
   TheRewarderPool public rewarderPool;
-  RewardToken internal rewardToken;
+  RewardToken public rewardToken;
   AccountingToken internal accountingToken;
 
   function setup() external {
