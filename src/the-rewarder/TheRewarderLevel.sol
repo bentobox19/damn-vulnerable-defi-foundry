@@ -4,8 +4,6 @@ pragma solidity >=0.8.0;
 import "forge-std/Test.sol";
 import "forge-std/Vm.sol";
 
-// import "./SideEntranceLenderPool.sol";
-
 import "./FlashLoanerPool.sol";
 import "./TheRewarderPool.sol";
 import "../DamnValuableToken.sol";
@@ -17,6 +15,7 @@ contract TheRewarderLevel is StdAssertions {
   address payable private constant bob = payable(address(uint160(uint256(keccak256(abi.encodePacked("bob"))))));
   address payable private constant charlie = payable(address(uint160(uint256(keccak256(abi.encodePacked("charlie"))))));
   address payable private constant david = payable(address(uint160(uint256(keccak256(abi.encodePacked("david"))))));
+  address payable[4] private users = [alice, bob, charlie, david];
 
   uint256 internal constant TOKENS_IN_LENDER_POOL = 1_000_000e18;
 
@@ -51,7 +50,6 @@ contract TheRewarderLevel is StdAssertions {
     vm.stopPrank();
 
     // alice, bob, charlie and david deposit tokens
-    address payable[4] memory users = [alice, bob, charlie, david];
     uint256 depositAmount = 100e18;
 
     for (uint8 i = 0; i < users.length; i++) {
@@ -93,40 +91,26 @@ contract TheRewarderLevel is StdAssertions {
     assertEq(rewarderPool.roundNumber(), 3);
 
     // Users should get neglegible rewards this round
-    // ?
+    for (uint8 i = 0; i < users.length; i++) {
+      vm.startPrank(users[i]);
+      rewarderPool.distributeRewards();
+      uint256 userRewards = rewardToken.balanceOf(address(users[i]));
+      uint256 delta = (userRewards - rewarderPool.REWARDS()) / users.length;
+      assertLt(delta, 1e16);
+      vm.stopPrank();
+    }
 
     // Rewards must have been issued to the player account
-    // ?
+    assertGt(rewardToken.totalSupply(), rewarderPool.REWARDS());
+    uint256 playerRewards = rewardToken.balanceOf(msg.sender);
+    assertGt(playerRewards, 0);
 
     // The amount of rewards earned should be close to total available amount
-    // ?
+    uint256 delta = rewarderPool.REWARDS() - playerRewards;
+    assertLt(delta, 1e17);
 
     // Balance of DVT tokens in player and lending pool hasn't changed
-    // ?
-
-    /*
-        // Users should get neglegible rewards this round
-        for (let i = 0; i < users.length; i++) {
-            await rewarderPool.connect(users[i]).distributeRewards();
-            const userRewards = await rewardToken.balanceOf(users[i].address);
-            const delta = userRewards.sub((await rewarderPool.REWARDS()).div(users.length));
-            expect(delta).to.be.lt(10n ** 16n)
-        }
-
-        // Rewards must have been issued to the player account
-        expect(await rewardToken.totalSupply()).to.be.gt(await rewarderPool.REWARDS());
-        const playerRewards = await rewardToken.balanceOf(player.address);
-        expect(playerRewards).to.be.gt(0);
-
-        // The amount of rewards earned should be close to total available amount
-        const delta = (await rewarderPool.REWARDS()).sub(playerRewards);
-        expect(delta).to.be.lt(10n ** 17n);
-
-        // Balance of DVT tokens in player and lending pool hasn't changed
-        expect(await liquidityToken.balanceOf(player.address)).to.eq(0);
-        expect(
-            await liquidityToken.balanceOf(flashLoanPool.address)
-        ).to.eq(TOKENS_IN_LENDER_POOL);
-    */
+    assertEq(liquidityToken.balanceOf(msg.sender), 0);
+    assertEq(liquidityToken.balanceOf(address(flashLoanPool)), TOKENS_IN_LENDER_POOL);
   }
 }
