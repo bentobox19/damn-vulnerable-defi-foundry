@@ -19,9 +19,9 @@ contract TheRewarderLevel is StdAssertions {
 
   uint256 internal constant TOKENS_IN_LENDER_POOL = 1_000_000e18;
 
-  DamnValuableToken internal liquidityToken;
-  FlashLoanerPool internal flashLoanPool;
-  TheRewarderPool internal rewarderPool;
+  DamnValuableToken public liquidityToken;
+  FlashLoanerPool public flashLoanPool;
+  TheRewarderPool public rewarderPool;
   RewardToken internal rewardToken;
   AccountingToken internal accountingToken;
 
@@ -89,13 +89,14 @@ contract TheRewarderLevel is StdAssertions {
 
   function validate() external {
     assertEq(rewarderPool.roundNumber(), 3);
+    uint256 delta;
 
     // Users should get neglegible rewards this round
     for (uint8 i = 0; i < users.length; i++) {
       vm.startPrank(users[i]);
       rewarderPool.distributeRewards();
       uint256 userRewards = rewardToken.balanceOf(address(users[i]));
-      uint256 delta = (userRewards - rewarderPool.REWARDS()) / users.length;
+      delta = userRewards - (rewarderPool.REWARDS() / users.length);
       assertLt(delta, 1e16);
       vm.stopPrank();
     }
@@ -106,7 +107,7 @@ contract TheRewarderLevel is StdAssertions {
     assertGt(playerRewards, 0);
 
     // The amount of rewards earned should be close to total available amount
-    uint256 delta = rewarderPool.REWARDS() - playerRewards;
+    delta = rewarderPool.REWARDS() - playerRewards;
     assertLt(delta, 1e17);
 
     // Balance of DVT tokens in player and lending pool hasn't changed
