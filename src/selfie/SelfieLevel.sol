@@ -12,9 +12,9 @@ contract SelfieLevel is StdAssertions {
   uint256 internal constant TOKEN_INITIAL_SUPPLY = 2_000_000e18;
   uint256 internal constant TOKENS_IN_POOL = 1_500_000e18;
 
-  DamnValuableTokenSnapshot token;
-  SimpleGovernance governance;
-  SelfiePool pool;
+  DamnValuableTokenSnapshot public token;
+  SimpleGovernance public governance;
+  SelfiePool public pool;
 
   function setup() external {
     vm.startPrank(deployer);
