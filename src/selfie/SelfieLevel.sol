@@ -2,28 +2,20 @@
 pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
-// import "forge-std/Vm.sol";
 
 import "./SelfiePool.sol";
 
 contract SelfieLevel is StdAssertions {
-  // Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-  // address payable private constant deployer = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
+  Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+  address payable private constant deployer = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
 
-  // uint256 internal constant ETHER_IN_POOL = 1_000e18;
-  // uint256 internal constant PLAYER_INITIAL_ETH_BALANCE = 1e18;
+  uint256 internal constant TOKEN_INITIAL_SUPPLY = 2_000_000e18;
+  uint256 internal constant TOKENS_IN_POOL = 1_500_000e18;
 
-  // SideEntranceLenderPool public pool;
+  DamnValuableTokenSnapshot token;
+  SimpleGovernance governance;
+  SelfiePool pool;
 
-
-/*
-    let deployer, player;
-    let token, governance, pool;
-
-    const TOKEN_INITIAL_SUPPLY = 2000000n * 10n ** 18n;
-    const TOKENS_IN_POOL = 1500000n * 10n ** 18n;
-
-*/
   function setup() external {
 
 
