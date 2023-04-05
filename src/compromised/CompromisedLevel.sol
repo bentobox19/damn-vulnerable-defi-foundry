@@ -3,94 +3,74 @@ pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
 
-// import "./SelfiePool.sol";
+import "./TrustfulOracleInitializer.sol";
+import "./Exchange.sol";
 
 contract CompromisedLevel is StdAssertions {
-  // Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-  // address payable private constant deployer = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
+  Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+  address payable private constant deployer = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
 
-  // uint256 internal constant TOKEN_INITIAL_SUPPLY = 2_000_000e18;
-  // uint256 internal constant TOKENS_IN_POOL = 1_500_000e18;
+  uint256 internal constant TRUSTED_SOURCE_INITIAL_ETH_BALANCE = 2e18;
+  uint256 internal constant PLAYER_INITIAL_ETH_BALANCE = 1e17;
+  uint256 internal constant INITIAL_NFT_PRICE = 999e18;
+  uint256 internal constant EXCHANGE_INITIAL_ETH_BALANCE = 999e18;
 
-  // DamnValuableTokenSnapshot public token;
-  // SimpleGovernance public governance;
-  // SelfiePool public pool;
-
-  /*
-    let deployer, player;
-    let oracle, exchange, nftToken;
-
-    const sources = [
-        '0xA73209FB1a42495120166736362A1DfA9F95A105',
-        '0xe92401A4d3af5E446d93D11EEc806b1462b39D15',
-        '0x81A5D6E50C214044bE44cA0CB057fe119097850c'
-    ];
-
-    const EXCHANGE_INITIAL_ETH_BALANCE = 999n * 10n ** 18n;
-    const INITIAL_NFT_PRICE = 999n * 10n ** 18n;
-    const PLAYER_INITIAL_ETH_BALANCE = 1n * 10n ** 17n;
-    const TRUSTED_SOURCE_INITIAL_ETH_BALANCE = 2n * 10n ** 18n;
-  */
+  TrustfulOracleInitializer internal oracle;
+  Exchange internal exchange;
+  DamnValuableNFT internal nftToken;
 
   function setup() external {
-    // ???
+    vm.startPrank(deployer);
 
-    /*
-        [deployer, player] = await ethers.getSigners();
+    address[] memory sources = new address[](3);
+    sources[0] = 0xA73209FB1a42495120166736362A1DfA9F95A105;
+    sources[1] = 0xe92401A4d3af5E446d93D11EEc806b1462b39D15;
+    sources[2] = 0x81A5D6E50C214044bE44cA0CB057fe119097850c;
 
-        // Initialize balance of the trusted source addresses
-        for (let i = 0; i < sources.length; i++) {
-            setBalance(sources[i], TRUSTED_SOURCE_INITIAL_ETH_BALANCE);
-            expect(await ethers.provider.getBalance(sources[i])).to.equal(TRUSTED_SOURCE_INITIAL_ETH_BALANCE);
-        }
+    for(uint8 i = 0; i < sources.length; i++) {
+      vm.deal(sources[i], TRUSTED_SOURCE_INITIAL_ETH_BALANCE);
+      assertEq(sources[i].balance, TRUSTED_SOURCE_INITIAL_ETH_BALANCE);
+    }
 
-        // Player starts with limited balance
-        setBalance(player.address, PLAYER_INITIAL_ETH_BALANCE);
-        expect(await ethers.provider.getBalance(player.address)).to.equal(PLAYER_INITIAL_ETH_BALANCE);
+    // Player starts with limited balance
+    vm.deal(msg.sender, PLAYER_INITIAL_ETH_BALANCE);
+    assertEq(msg.sender.balance, PLAYER_INITIAL_ETH_BALANCE);
 
-        // Deploy the oracle and setup the trusted sources with initial prices
-        const TrustfulOracleInitializerFactory = await ethers.getContractFactory('TrustfulOracleInitializer', deployer);
-        oracle = await (await ethers.getContractFactory('TrustfulOracle', deployer)).attach(
-            await (await TrustfulOracleInitializerFactory.deploy(
-                sources,
-                ['DVNFT', 'DVNFT', 'DVNFT'],
-                [INITIAL_NFT_PRICE, INITIAL_NFT_PRICE, INITIAL_NFT_PRICE]
-            )).oracle()
-        );
+    // Deploy the oracle and setup the trusted sources with initial prices
+    string[] memory symbols = new string[](3);
+    for(uint i = 0; i < 3; i++) {
+      symbols[i] = "DVNFT";
+    }
+    uint256[] memory initialPrices = new uint256[](3);
+    for(uint i = 0; i < 3; i++) {
+      initialPrices[i] = INITIAL_NFT_PRICE;
+    }
+    oracle = new TrustfulOracleInitializer(sources, symbols, initialPrices);
 
-        // Deploy the exchange and get an instance to the associated ERC721 token
-        exchange = await (await ethers.getContractFactory('Exchange', deployer)).deploy(
-            oracle.address,
-            { value: EXCHANGE_INITIAL_ETH_BALANCE }
-        );
-        nftToken = await (await ethers.getContractFactory('DamnValuableNFT', deployer)).attach(await exchange.token());
-        expect(await nftToken.owner()).to.eq(ethers.constants.AddressZero); // ownership renounced
-        expect(await nftToken.rolesOf(exchange.address)).to.eq(await nftToken.MINTER_ROLE());
-    */
+    // Deploy the exchange and get an instance to the associated ERC721 token
+    exchange = new Exchange(address(oracle));
+    (bool success,) = address(exchange).call{value: EXCHANGE_INITIAL_ETH_BALANCE}("");
+    success;
+    nftToken = exchange.token();
+    assertEq(nftToken.owner(), 0x0000000000000000000000000000000000000000); // ownership renounced
+    assertEq(nftToken.rolesOf(address(exchange)), nftToken.MINTER_ROLE());
+
+    vm.stopPrank();
   }
 
   function validate() external {
+    // drain the exchange
+    assertEq(address(exchange).balance, 0);
+    assertGt(msg.sender.balance, EXCHANGE_INITIAL_ETH_BALANCE);
+
     // ???
+    // TODO: Understand this condition
+    assertEq(nftToken.balanceOf(msg.sender), 0);
 
-    /*
-        expect(
-            await ethers.provider.getBalance(exchange.address)
-        ).to.be.eq(0);
-
-        // Player's ETH balance must have significantly increased
-        expect(
-            await ethers.provider.getBalance(player.address)
-        ).to.be.gt(EXCHANGE_INITIAL_ETH_BALANCE);
-
-        // Player must not own any NFT
-        expect(
-            await nftToken.balanceOf(player.address)
-        ).to.be.eq(0);
-
-        // NFT price shouldn't have changed
-        expect(
-            await oracle.getMedianPrice('DVNFT')
-        ).to.eq(INITIAL_NFT_PRICE);
-    */
+    // ???
+    // TODO (1): Understand this condition
+    // TODO (2): Understand how to properly pass this param
+    // string calldata param = "DVNFT";
+    // assertEq(oracle.getMedianPrice(param), INITIAL_NFT_PRICE);
   }
 }

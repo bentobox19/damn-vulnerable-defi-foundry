@@ -8,6 +8,7 @@
 - [04 Side Entrance](#04-side-entrance)
 - [05 The Rewarder](#05-the-rewarder)
 - [06 Selfie](#06-selfie)
+- [07 Compromised](#07-compromised)
 
 <!-- /MarkdownTOC -->
 
@@ -298,6 +299,10 @@ function receiveFlashLoan(uint256 amount) public {
 }
 ```
 
+### References
+
+* TODO: Reference to ERC20 Snapshot
+
 ## 06 Selfie
 
 To beat this level, we need to comply with
@@ -365,3 +370,25 @@ function attack() public {
   governance.executeAction(1);
 }
 ```
+
+### References
+
+* TODO: Reference to ERC20 Snapshot
+
+## 07 Compromised
+
+To beat this level, we need to comply with
+
+```solidity
+
+```
+
+In other words: Drain the pool, get all the funds.
+
+### Solution
+
+???
+
+### Reference
+
+* TODO: Reference to ERC721
