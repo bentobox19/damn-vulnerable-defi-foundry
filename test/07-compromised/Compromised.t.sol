@@ -2,17 +2,16 @@
 pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
-// utils has setup() and validate() of this level
-// import "../../src/<level>/<LevelName>Level.sol";
+import "../../src/compromised/CompromisedLevel.sol";
 
 contract LevelTest is Test {
-  // <LevelName>Level level = new <LevelName>Level();
+  CompromisedLevel level = new CompromisedLevel();
 
   function setUp() public {
     // level.setup()
   }
 
-  function _testExploit() public {
+  function testExploit() public {
     // level.validate()
   }
 }
