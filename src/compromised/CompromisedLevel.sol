@@ -15,7 +15,7 @@ contract CompromisedLevel is StdAssertions {
   uint256 internal constant INITIAL_NFT_PRICE = 999e18;
   uint256 internal constant EXCHANGE_INITIAL_ETH_BALANCE = 999e18;
 
-  TrustfulOracleInitializer internal oracle;
+  TrustfulOracle internal oracle;
   Exchange internal exchange;
   DamnValuableNFT internal nftToken;
 
@@ -45,7 +45,7 @@ contract CompromisedLevel is StdAssertions {
     for(uint i = 0; i < 3; i++) {
       initialPrices[i] = INITIAL_NFT_PRICE;
     }
-    oracle = new TrustfulOracleInitializer(sources, symbols, initialPrices);
+    oracle = new TrustfulOracleInitializer(sources, symbols, initialPrices).oracle();
 
     // Deploy the exchange and get an instance to the associated ERC721 token
     exchange = new Exchange(address(oracle));
@@ -68,9 +68,7 @@ contract CompromisedLevel is StdAssertions {
     assertEq(nftToken.balanceOf(msg.sender), 0);
 
     // ???
-    // TODO (1): Understand this condition
-    // TODO (2): Understand how to properly pass this param
-    // string calldata param = "DVNFT";
-    // assertEq(oracle.getMedianPrice(param), INITIAL_NFT_PRICE);
+    // TODO: Understand this condition
+    assertEq(oracle.getMedianPrice("DVNFT"), INITIAL_NFT_PRICE);
   }
 }

@@ -301,7 +301,7 @@ function receiveFlashLoan(uint256 amount) public {
 
 ### References
 
-* TODO: Reference to ERC20 Snapshot
+* https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#ERC20Snapshot
 
 ## 06 Selfie
 
@@ -373,7 +373,7 @@ function attack() public {
 
 ### References
 
-* TODO: Reference to ERC20 Snapshot
+* https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#ERC20Snapshot
 
 ## 07 Compromised
 
@@ -391,4 +391,4 @@ In other words: Drain the pool, get all the funds.
 
 ### Reference
 
-* TODO: Reference to ERC721
+* https://docs.openzeppelin.com/contracts/4.x/api/token/erc721
