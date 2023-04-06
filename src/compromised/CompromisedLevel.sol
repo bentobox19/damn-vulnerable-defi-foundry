@@ -64,11 +64,8 @@ contract CompromisedLevel is StdAssertions {
     assertGt(msg.sender.balance, EXCHANGE_INITIAL_ETH_BALANCE);
 
     // ???
-    // TODO: Understand this condition
     assertEq(nftToken.balanceOf(msg.sender), 0);
-
     // ???
-    // TODO: Understand this condition
     assertEq(oracle.getMedianPrice("DVNFT"), INITIAL_NFT_PRICE);
   }
 }
