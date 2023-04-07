@@ -63,9 +63,9 @@ contract CompromisedLevel is StdAssertions {
     assertEq(address(exchange).balance, 0);
     assertGt(msg.sender.balance, EXCHANGE_INITIAL_ETH_BALANCE);
 
-    // ???
+    // player doesn't own any NFT
     assertEq(nftToken.balanceOf(msg.sender), 0);
-    // ???
+    //  median price doesn't vary
     assertEq(oracle.getMedianPrice("DVNFT"), INITIAL_NFT_PRICE);
   }
 }

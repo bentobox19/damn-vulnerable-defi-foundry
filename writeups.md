@@ -391,5 +391,7 @@ In other words: Drain the pool, get all the funds.
 
 ### Reference
 
+* https://eips.ethereum.org/EIPS/eip-721
+* https://ethereum.org/en/developers/docs/standards/tokens/erc-721/
 * https://docs.openzeppelin.com/contracts/4.x/api/token/erc721
 * https://docs.openzeppelin.com/contracts/4.x/api/access#Ownable
