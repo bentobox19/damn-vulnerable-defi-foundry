@@ -15,12 +15,13 @@ contract CompromisedLevel is StdAssertions {
   uint256 internal constant INITIAL_NFT_PRICE = 999e18;
   uint256 internal constant EXCHANGE_INITIAL_ETH_BALANCE = 999e18;
 
-  TrustfulOracle internal oracle;
-  Exchange internal exchange;
-  DamnValuableNFT internal nftToken;
+  TrustfulOracle public oracle;
+  Exchange public exchange;
+  DamnValuableNFT public nftToken;
 
   function setup() external {
     vm.startPrank(deployer);
+    vm.deal(deployer, EXCHANGE_INITIAL_ETH_BALANCE);
 
     address[] memory sources = new address[](3);
     sources[0] = 0xA73209FB1a42495120166736362A1DfA9F95A105;
@@ -65,7 +66,7 @@ contract CompromisedLevel is StdAssertions {
 
     // player doesn't own any NFT
     assertEq(nftToken.balanceOf(msg.sender), 0);
-    //  median price doesn't vary
+    // median price doesn't vary
     assertEq(oracle.getMedianPrice("DVNFT"), INITIAL_NFT_PRICE);
   }
 }

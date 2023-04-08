@@ -327,7 +327,7 @@ In other words: Drain the pool, get all the funds.
 
 * Because `executeAction()` will ask for a minimum `ACTION_DELAY_IN_SECONDS` of `2 days`, we would have to wait IRL for that time to execute the attack. We just pretend we do with `vm.warp(block.timestamp + 2 days)`. Also we would get the `actionId` by inspecting the `ActionQueued` event log.
 
-Putting eveerything together, we have
+Putting everything together, we have
 
 ```solidity
 function onFlashLoan(
@@ -388,6 +388,24 @@ In other words: Drain the pool, get all the funds.
 ### Solution
 
 ???
+
+* https://gchq.github.io/CyberChef/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',true,false)&input=NGQgNDggNjggNmEgNGUgNmEgNjMgMzQgNWEgNTcgNTkgNzggNTkgNTcgNDUgMzAgNGUgNTQgNWEgNmIgNTkgNTQgNTkgMzEgNTkgN2EgNWEgNmQgNTkgN2EgNTUgMzQgNGUgNmEgNDYgNmIgNGUgNDQgNTEgMzQgNGYgNTQgNGEgNmEgNWEgNDcgNWEgNjggNTkgN2EgNDIgNmEgNGUgNmQgNGQgMzQgNTkgN2EgNDkgMzEgNGUgNmEgNDIgNjkgNWEgNmEgNDIgNmEgNGYgNTcgNWEgNjkgNTkgMzIgNTIgNjggNWEgNTQgNGEgNmQgNGUgNDQgNjMgN2EgNGUgNTcgNDUgMzU
+* https://gchq.github.io/CyberChef/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',true,false)&input=NGQgNDggNjcgNzkgNGQgNDQgNjcgNzkgNGUgNDQgNGEgNmEgNGUgNDQgNDIgNjggNTkgMzIgNTIgNmQgNTkgNTQgNmMgNmMgNWEgNDQgNjcgMzQgNGYgNTcgNTUgMzIgNGYgNDQgNTYgNmEgNGQgNmEgNGQgMzEgNGUgNDQgNjQgNjggNTkgMzIgNGEgNmMgNWEgNDQgNmMgNjkgNWEgNTcgNWEgNmEgNGUgNmEgNDEgN2EgNGUgN2EgNDYgNmMgNGYgNTQgNjcgMzMgNGUgNTcgNWEgNjkgNTkgMzIgNTEgMzMgNGQgN2EgNTkgN2EgNGUgNDQgNDIgNjkgNTkgNmEgNTEgMzQK
+
+```
+0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9
+0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48
+```
+
+```bash
+# You can verify that the private keys are the ones of the trusted sources
+cast wallet address --private-key 0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9
+# 0xe92401A4d3af5E446d93D11EEc806b1462b39D15
+
+cast wallet address --private-key 0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48
+# 0x81A5D6E50C214044bE44cA0CB057fe119097850c
+
+```
 
 ### Reference
 
