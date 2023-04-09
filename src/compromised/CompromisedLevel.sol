@@ -49,9 +49,7 @@ contract CompromisedLevel is StdAssertions {
     oracle = new TrustfulOracleInitializer(sources, symbols, initialPrices).oracle();
 
     // Deploy the exchange and get an instance to the associated ERC721 token
-    exchange = new Exchange(address(oracle));
-    (bool success,) = address(exchange).call{value: EXCHANGE_INITIAL_ETH_BALANCE}("");
-    success;
+    exchange = new Exchange{value: EXCHANGE_INITIAL_ETH_BALANCE}(address(oracle));
     nftToken = exchange.token();
     assertEq(nftToken.owner(), 0x0000000000000000000000000000000000000000); // ownership renounced
     assertEq(nftToken.rolesOf(address(exchange)), nftToken.MINTER_ROLE());

