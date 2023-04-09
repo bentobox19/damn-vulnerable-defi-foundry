@@ -9,6 +9,7 @@
 - [05 The Rewarder](#05-the-rewarder)
 - [06 Selfie](#06-selfie)
 - [07 Compromised](#07-compromised)
+- [08 Puppet](#08-puppet)
 
 <!-- /MarkdownTOC -->
 
@@ -481,3 +482,20 @@ function attack(Vm vm) public {
 * https://ethereum.org/en/developers/docs/standards/tokens/erc-721/
 * https://docs.openzeppelin.com/contracts/4.x/api/token/erc721
 * https://docs.openzeppelin.com/contracts/4.x/api/access#Ownable
+
+## 08 Puppet
+
+To beat this level, we need to comply with
+
+```solidity
+
+```
+
+### Solution
+
+???
+
+### References
+
+* https://docs.uniswap.org/contracts/v1/overview
+* https://github.com/Uniswap/v1-contracts/blob/master/contracts/uniswap_exchange.vy#L99-L111
