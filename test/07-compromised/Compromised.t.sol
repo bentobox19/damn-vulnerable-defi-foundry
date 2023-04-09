@@ -56,7 +56,7 @@ contract Attacker is IERC721Receiver {
     token.approve(address(exchange), tokenId);
     exchange.sellOne(tokenId);
 
-    // give the money to the player to beat the level
+    // give the funds to the player to beat the level
     (bool success,) = msg.sender.call{value: address(this).balance}("");
     success;
   }
