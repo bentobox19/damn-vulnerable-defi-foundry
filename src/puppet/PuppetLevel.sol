@@ -14,6 +14,7 @@ interface IUniswapFactory {
 interface IUniswapExchange {
   function addLiquidity(uint256, uint256, uint256) external payable;
   function getTokenToEthInputPrice(uint256) external returns(uint256);
+  function tokenToEthSwapInput(uint256, uint256, uint256) external;
 }
 
 contract PuppetLevel is StdAssertions {
@@ -40,25 +41,25 @@ contract PuppetLevel is StdAssertions {
 
     token = new DamnValuableToken();
 
-    // Deploy a exchange that will be used as the factory template
+    // deploy a exchange that will be used as the factory template
     address exchangeTemplateAddress = new UniswapV1Exchange().exchangeTemplateAddress();
 
-    // Deploy factory, initializing it with the address of the template exchange
+    // deploy factory, initializing it with the address of the template exchange
     address uniswapFactoryAddress = new UniswapV1Factory().uniswapFactoryAddress();
     uniswapFactory = IUniswapFactory(uniswapFactoryAddress);
     uniswapFactory.initializeFactory(exchangeTemplateAddress);
 
-    // Create a new exchange for the token, and retrieve the deployed exchange's address
+    // create a new exchange for the token, and retrieve the deployed exchange's address
     vm.recordLogs();
     uniswapFactory.createExchange(address(token));
     Vm.Log[] memory entries = vm.getRecordedLogs();
     address uniswapExchangeAddress = address(uint160(uint256(entries[0].topics[2])));
     uniswapExchange = IUniswapExchange(uniswapExchangeAddress);
 
-    // Deploy the lending pool
+    // deploy the lending pool
     lendingPool = new PuppetPool(address(token), uniswapExchangeAddress);
 
-    // Add initial token and ETH liquidity to the pool
+    // add initial token and ETH liquidity to the pool
     token.approve(uniswapExchangeAddress, UNISWAP_INITIAL_TOKEN_RESERVE);
     uniswapExchange.addLiquidity
       {value: UNISWAP_INITIAL_ETH_RESERVE}
@@ -68,17 +69,17 @@ contract PuppetLevel is StdAssertions {
       block.timestamp * 2             // deadline
     );
 
-    // Ensure Uniswap exchange is working as expected
+    // ensure Uniswap exchange is working as expected
     uint256 tokenToEthInputPrice =
       (1e18 * 997 * UNISWAP_INITIAL_ETH_RESERVE) /
       (UNISWAP_INITIAL_TOKEN_RESERVE * 1000 + 1e18 * 997);
     assertEq(uniswapExchange.getTokenToEthInputPrice(1e18), tokenToEthInputPrice);
 
-    // Setup initial token balances of pool and player accounts
+    // setup initial token balances of pool and player accounts
     token.transfer(msg.sender, PLAYER_INITIAL_TOKEN_BALANCE);
     token.transfer(address(lendingPool), POOL_INITIAL_TOKEN_BALANCE);
 
-    // Ensure correct setup of pool. For example, to borrow 1 need to deposit 2
+    // ensure correct setup of pool. For example, to borrow 1 need to deposit 2
     assertEq(lendingPool.calculateDepositRequired(1e18), 2e18);
     assertEq(
       lendingPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE),
@@ -89,8 +90,12 @@ contract PuppetLevel is StdAssertions {
   }
 
   function validate() external {
-    // Player has taken all tokens from the pool
-    // assertEq(token.balanceOf(address(lendingPool)), 0);
-    // assertEq(token.balanceOf(msg.sender), POOL_INITIAL_TOKEN_BALANCE);
+    // In the challenge written in hardhat we checked that the
+    // attacker did everything in one single transaction.
+    // we omit this check in forge.
+
+    // player has taken all tokens from the pool
+    assertEq(token.balanceOf(address(lendingPool)), 0);
+    assertEq(token.balanceOf(msg.sender), POOL_INITIAL_TOKEN_BALANCE);
   }
 }
