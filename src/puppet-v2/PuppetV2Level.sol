@@ -31,8 +31,6 @@ contract PuppetV2Level is StdAssertions, StdCheats {
   IUniswapV2Factory internal uniswapFactory;
   IUniswapV2Router01 internal uniswapRouter;
 
-  // IPuppetPool public lendingPool;
-
   function setup() external {
     vm.startPrank(deployer);
     vm.deal(deployer, UNISWAP_INITIAL_WETH_RESERVE);
@@ -64,16 +62,14 @@ contract PuppetV2Level is StdAssertions, StdCheats {
     // Create Uniswap pair against WETH and add liquidity
     token.approve(address(uniswapRouter), UNISWAP_INITIAL_TOKEN_RESERVE);
     uniswapRouter.addLiquidityETH
-      {value: UNISWAP_INITIAL_WETH_RESERVE}(
+      { value : UNISWAP_INITIAL_WETH_RESERVE }(
       address(token),
-      UNISWAP_INITIAL_TOKEN_RESERVE,
-      0,
-      0,
-      deployer,
-      (block.number + 1000) * 2
+      UNISWAP_INITIAL_TOKEN_RESERVE,    // amountTokenDesired
+      0,                                // amountTokenMin
+      0,                                // amountETHMin
+      deployer,                         // to
+      (block.number + 1000) * 2         // deadline
     );
-
-    // lendingPool = IPuppetV2Pool(deployCode("PuppetV2Pool.sol"));
 
     vm.stopPrank();
 /*
