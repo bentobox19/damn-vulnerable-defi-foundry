@@ -6,7 +6,7 @@ import "../DamnValuableToken.sol";
 import "solmate/src/tokens/WETH.sol";
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
-import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 interface IPuppetV2Pool {
   function borrow(uint256) external;
@@ -35,6 +35,7 @@ contract PuppetV2Level is StdAssertions, StdCheats {
 
   function setup() external {
     vm.startPrank(deployer);
+    vm.deal(deployer, UNISWAP_INITIAL_WETH_RESERVE);
 
     vm.deal(msg.sender, PLAYER_INITIAL_ETH_BALANCE);
     assertEq(msg.sender.balance, PLAYER_INITIAL_ETH_BALANCE);
@@ -45,26 +46,42 @@ contract PuppetV2Level is StdAssertions, StdCheats {
 
     // Deploy Uniswap Factory and Router
     uniswapFactory = IUniswapV2Factory(
-      deployCode("UniswapV2Factory.sol",
-        abi.encode(0x0000000000000000000000000000000000000000)));
+      deployCode(
+        "UniswapV2Factory.sol",
+        abi.encode(0x0000000000000000000000000000000000000000)
+      )
+    );
+    uniswapRouter = IUniswapV2Router01(
+      deployCode(
+        "uniswapV2Router02.sol",
+        abi.encode(
+          address(uniswapFactory),
+          address(weth)
+        )
+      )
+    );
 
-
+    // Create Uniswap pair against WETH and add liquidity
+    token.approve(address(uniswapRouter), UNISWAP_INITIAL_TOKEN_RESERVE);
+    uniswapRouter.addLiquidityETH
+      {value: UNISWAP_INITIAL_WETH_RESERVE}(
+      address(token),
+      UNISWAP_INITIAL_TOKEN_RESERVE,
+      0,
+      0,
+      deployer,
+      (block.number + 1000) * 2
+    );
 
     // lendingPool = IPuppetV2Pool(deployCode("PuppetV2Pool.sol"));
 
     vm.stopPrank();
 /*
 
-  uniswapRouter = await UniswapRouterFactory.deploy(
-      uniswapFactory.address,
-      weth.address
-  );
 
-  // Create Uniswap pair against WETH and add liquidity
-  await token.approve(
-      uniswapRouter.address,
-      UNISWAP_INITIAL_TOKEN_RESERVE
-  );
+
+
+
   await uniswapRouter.addLiquidityETH(
       token.address,
       UNISWAP_INITIAL_TOKEN_RESERVE,                              // amountTokenDesired
@@ -74,6 +91,10 @@ contract PuppetV2Level is StdAssertions, StdCheats {
       (await ethers.provider.getBlock('latest')).timestamp * 2,   // deadline
       { value: UNISWAP_INITIAL_WETH_RESERVE }
   );
+
+
+
+
   uniswapExchange = await UniswapPairFactory.attach(
       await uniswapFactory.getPair(token.address, weth.address)
   );
