@@ -17,3 +17,6 @@
 	path = lib/solady
 	url = https://github.com/vectorized/solady
 	branch = v0.0.85
+[submodule "lib/uniswap/v2-periphery"]
+	path = lib/uniswap/v2-periphery
+	url = https://github.com/uniswap/v2-periphery
