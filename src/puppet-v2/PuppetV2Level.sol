@@ -6,9 +6,11 @@ import "../DamnValuableToken.sol";
 import "solmate/src/tokens/WETH.sol";
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
 
 interface IPuppetV2Pool {
   function borrow(uint256) external;
+  function calculateDepositOfWETHRequired(uint256) external view returns (uint256);
 }
 
 contract PuppetV2Level is StdAssertions, StdCheats {
@@ -27,10 +29,8 @@ contract PuppetV2Level is StdAssertions, StdCheats {
   DamnValuableToken internal token;
   WETH internal weth;
   IUniswapV2Factory internal uniswapFactory;
+  IUniswapRouter internal uniswapRouter;
 
-  // IUniswapRouter internal uniswapRouter;
-  // IUniswapPair internal uniswapPair;
-  // IUniswapExchange public uniswapExchange;
   // IPuppetPool public lendingPool;
 
   function setup() external {
@@ -44,23 +44,17 @@ contract PuppetV2Level is StdAssertions, StdCheats {
     weth = new WETH();
 
     // Deploy Uniswap Factory and Router
-    // uniswapFactory
+    uniswapFactory = IUniswapV2Factory(
+      deployCode("UniswapV2Factory.sol",
+        abi.encode(0x0000000000000000000000000000000000000000)));
 
 
 
-    // IPuppetV2Pool lendingPool = IPuppetV2Pool(deployCode("PuppetV2Pool.sol"));
+    // lendingPool = IPuppetV2Pool(deployCode("PuppetV2Pool.sol"));
 
     vm.stopPrank();
 /*
 
-
-
-
-
-
-
-
-  uniswapFactory = await UniswapFactoryFactory.deploy(ethers.constants.AddressZero);
   uniswapRouter = await UniswapRouterFactory.deploy(
       uniswapFactory.address,
       weth.address

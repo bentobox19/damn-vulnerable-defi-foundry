@@ -24,3 +24,7 @@
 	path = lib/uniswap/v2-core
 	url = https://github.com/uniswap/v2-core
 	branch = v1.0.1
+[submodule "lib/uniswap/lib"]
+	path = lib/uniswap/lib
+	url = https://github.com/uniswap/solidity-lib
+	branch = v2.1.0
