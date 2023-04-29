@@ -29,7 +29,7 @@ contract PuppetV2Level is StdAssertions, StdCheats {
   DamnValuableToken internal token;
   WETH internal weth;
   IUniswapV2Factory internal uniswapFactory;
-  IUniswapRouter internal uniswapRouter;
+  IUniswapV2Router01 internal uniswapRouter;
 
   // IPuppetPool public lendingPool;
 
