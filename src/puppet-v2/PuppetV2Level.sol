@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "../DamnValuableToken.sol";
 import "solmate/src/tokens/WETH.sol";
 
-// import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 // import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 interface IPuppetV2Pool {
@@ -26,9 +26,9 @@ contract PuppetV2Level is StdAssertions, StdCheats {
 
   uint256 internal constant POOL_INITIAL_TOKEN_BALANCE = 1000000e18;
 
-  // DamnValuableToken internal token;
-  // WETH internal weth;
-  // IUniswapV2Factory internal uniswapFactory;
+  DamnValuableToken internal token;
+  WETH internal weth;
+  IUniswapV2Factory internal uniswapFactory;
   // IUniswapV2Router01 internal uniswapRouter;
 
   function setup() external {
@@ -39,18 +39,16 @@ contract PuppetV2Level is StdAssertions, StdCheats {
     assertEq(msg.sender.balance, PLAYER_INITIAL_ETH_BALANCE);
 
     // Deploy tokens to be traded
-    // token = new DamnValuableToken();
-    // weth = new WETH();
+    token = new DamnValuableToken();
+    weth = new WETH();
 
     // Deploy Uniswap Factory and Router
-    /*
     uniswapFactory = IUniswapV2Factory(
       deployCode(
         "UniswapV2Factory.sol",
         abi.encode(0x0000000000000000000000000000000000000000)
       )
     );
-    */
     /*
     uniswapRouter = IUniswapV2Router01(
       deployCode(
