@@ -536,6 +536,18 @@ lendingPool.borrow
 
 ### Setup Notes
 
+* Initially we added the libs of uniswap2 as deps,
+* But there was this problem when referencing pairs
+* turns out that the function `blabla()` used a init code hash
+* that doesn't work on testsnets (need more investigation)
+
+* solution was just copy the libraru files we needed into the challenges directory sources
+* and modify that line, that we compute from the function UniswapV2Factory.createPair()
+
+* https://github.com/Uniswap/v2-core/issues/102
+* https://ethereum.stackexchange.com/questions/88075/uniswap-addliquidity-function-transaction-revert
+*
+
 ```solidity
 pair = address(uint(keccak256(abi.encodePacked(
         hex'ff',
