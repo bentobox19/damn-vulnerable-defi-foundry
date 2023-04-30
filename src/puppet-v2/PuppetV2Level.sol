@@ -6,6 +6,7 @@ import "../DamnValuableToken.sol";
 import "solmate/src/tokens/WETH.sol";
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 interface IPuppetV2Pool {
@@ -30,6 +31,8 @@ contract PuppetV2Level is StdAssertions, StdCheats {
   WETH internal weth;
   IUniswapV2Factory internal uniswapFactory;
   IUniswapV2Router01 internal uniswapRouter;
+  IUniswapV2Pair internal uniswapExchange;
+  IPuppetV2Pool internal lendingPool;
 
   function setup() external {
     vm.startPrank(deployer);
@@ -46,18 +49,14 @@ contract PuppetV2Level is StdAssertions, StdCheats {
     uniswapFactory = IUniswapV2Factory(
       deployCode(
         "UniswapV2Factory.sol",
-        abi.encode(0x0000000000000000000000000000000000000000)
-      )
-    );
+        abi.encode(0x0000000000000000000000000000000000000000)));
     uniswapRouter = IUniswapV2Router01(
       deployCode(
         "uniswapV2Router02.sol",
         abi.encode(
           address(uniswapFactory),
           address(weth)
-        )
-      )
-    );
+        )));
 
     // Create Uniswap pair against WETH and add liquidity
     token.approve(address(uniswapRouter), UNISWAP_INITIAL_TOKEN_RESERVE);
@@ -71,61 +70,36 @@ contract PuppetV2Level is StdAssertions, StdCheats {
       (block.number + 1000) * 2         // deadline
     );
 
+    uniswapExchange = IUniswapV2Pair(
+      uniswapFactory.getPair(address(token), address(weth)));
+    assertGt(uniswapExchange.balanceOf(deployer), 0);
+
+    // Deploy the lending pool
+    lendingPool = IPuppetV2Pool(
+      deployCode(
+        "PuppetV2Pool.sol",
+        abi.encode(
+          address(weth),
+          address(token),
+          address(uniswapExchange),
+          address(uniswapFactory)
+        )));
+
+    // Setup initial token balances of pool and player accounts
+    token.transfer(msg.sender, PLAYER_INITIAL_TOKEN_BALANCE);
+    token.transfer(address(lendingPool), POOL_INITIAL_TOKEN_BALANCE);
+
+    // Check pool's been correctly setup
+    assertEq(lendingPool.calculateDepositOfWETHRequired(1e18), 3e17);
+    assertEq(lendingPool.calculateDepositOfWETHRequired(
+      POOL_INITIAL_TOKEN_BALANCE), 300000e18);
+
     vm.stopPrank();
-/*
-
-  await uniswapRouter.addLiquidityETH(
-      token.address,
-      UNISWAP_INITIAL_TOKEN_RESERVE,                              // amountTokenDesired
-      0,                                                          // amountTokenMin
-      0,                                                          // amountETHMin
-      deployer.address,                                           // to
-      (await ethers.provider.getBlock('latest')).timestamp * 2,   // deadline
-      { value: UNISWAP_INITIAL_WETH_RESERVE }
-  );
-
-
-
-
-  uniswapExchange = await UniswapPairFactory.attach(
-      await uniswapFactory.getPair(token.address, weth.address)
-  );
-  expect(await uniswapExchange.balanceOf(deployer.address)).to.be.gt(0);
-
-  // Deploy the lending pool
-  lendingPool = await (await ethers.getContractFactory('PuppetV2Pool', deployer)).deploy(
-      weth.address,
-      token.address,
-      uniswapExchange.address,
-      uniswapFactory.address
-  );
-
-  // Setup initial token balances of pool and player accounts
-  await token.transfer(player.address, PLAYER_INITIAL_TOKEN_BALANCE);
-  await token.transfer(lendingPool.address, POOL_INITIAL_TOKEN_BALANCE);
-
-  // Check pool's been correctly setup
-  expect(
-      await lendingPool.calculateDepositOfWETHRequired(10n ** 18n)
-  ).to.eq(3n * 10n ** 17n);
-  expect(
-      await lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE)
-  ).to.eq(300000n * 10n ** 18n);
-*/
   }
 
   function validate() external {
-    // ???
-/*
-// Player has taken all tokens from the pool
-expect(
-    await token.balanceOf(lendingPool.address)
-).to.be.eq(0);
-
-expect(
-    await token.balanceOf(player.address)
-).to.be.gte(POOL_INITIAL_TOKEN_BALANCE);
-});
-*/
+    // Player has taken all tokens from the pool
+    assertEq(token.balanceOf(address(lendingPool)), 0);
+    assertGt(token.balanceOf(msg.sender), POOL_INITIAL_TOKEN_BALANCE);
   }
 }

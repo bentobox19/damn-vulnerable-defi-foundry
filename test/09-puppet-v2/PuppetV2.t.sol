@@ -12,7 +12,7 @@ contract PuppetV2Test is Test {
   }
 
   function testExploit() public {
-    // level.validate();
+    level.validate();
   }
 
   receive() external payable {}
