@@ -550,3 +550,9 @@ pair = address(uint(keccak256(abi.encodePacked(
         hex'0284ae99a354b043979214f24e12286d14737a5e651bf6757b39ecc3a6cef482'
     ))));
 ```
+
+
+@uniswap/v2-periphery=lib/uniswap/v2-periphery
+@uniswap/v2-core=lib/uniswap/v2-core
+@uniswap/lib=lib/uniswap/lib
+./libraries/UniswapV2Library.sol=src/puppet-v2/HelperUniswapV2Library.sol

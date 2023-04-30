@@ -2,8 +2,3 @@
 @openzeppelin/contracts=lib/openzeppelin-contracts/contracts/
 solady/=lib/solady/
 solmate/=lib/solmate/
-
-@uniswap/v2-periphery=lib/uniswap/v2-periphery
-@uniswap/v2-core=lib/uniswap/v2-core
-@uniswap/lib=lib/uniswap/lib
-./libraries/UniswapV2Library.sol=src/puppet-v2/HelperUniswapV2Library.sol
