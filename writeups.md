@@ -547,12 +547,7 @@ pair = address(uint(keccak256(abi.encodePacked(
         //   keccak256(abi.encodePacked(bytecode))
         //   at the function UniswapV2Factory.createPair()
         // probably this happens since we are deploying to our testnet.
-        hex'0284ae99a354b043979214f24e12286d14737a5e651bf6757b39ecc3a6cef482'
+        // needs more investigation.
+        hex'e091aae7c9eeedb6bff7e60c8e1a808d9cdc235f6b2e6e93284b02a4170f9361'
     ))));
 ```
-
-
-@uniswap/v2-periphery=lib/uniswap/v2-periphery
-@uniswap/v2-core=lib/uniswap/v2-core
-@uniswap/lib=lib/uniswap/lib
-./libraries/UniswapV2Library.sol=src/puppet-v2/HelperUniswapV2Library.sol

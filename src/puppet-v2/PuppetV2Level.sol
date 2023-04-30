@@ -60,8 +60,7 @@ contract PuppetV2Level is StdAssertions, StdCheats {
     );
 
     // Create Uniswap pair against WETH and add liquidity
-    // token.approve(address(uniswapRouter), UNISWAP_INITIAL_TOKEN_RESERVE);
-    /*
+    token.approve(address(uniswapRouter), UNISWAP_INITIAL_TOKEN_RESERVE);
     uniswapRouter.addLiquidityETH
       { value : UNISWAP_INITIAL_WETH_RESERVE }(
       address(token),
@@ -71,14 +70,9 @@ contract PuppetV2Level is StdAssertions, StdCheats {
       deployer,                         // to
       (block.number + 1000) * 2         // deadline
     );
-    */
 
     vm.stopPrank();
 /*
-
-
-
-
 
   await uniswapRouter.addLiquidityETH(
       token.address,
