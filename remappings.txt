@@ -3,4 +3,5 @@
 solady/=lib/solady/
 solmate/=lib/solmate/
 
+@uniswap/v2-core=src/puppet-v2/uniswap-v2/v2-core
 @uniswap/v2-periphery=src/puppet-v2/uniswap-v2/v2-periphery
