@@ -10,6 +10,7 @@
 - [06 Selfie](#06-selfie)
 - [07 Compromised](#07-compromised)
 - [08 Puppet](#08-puppet)
+- [09 Puppet V2](#09-puppet-v2)
 
 <!-- /MarkdownTOC -->
 
@@ -530,3 +531,22 @@ lendingPool.borrow
 * https://docs.uniswap.org/contracts/v1/overview
 * https://docs.uniswap.org/contracts/v1/reference/interfaces
 * https://github.com/Uniswap/v1-contracts/blob/master/contracts/uniswap_exchange.vy
+
+## 09 Puppet V2
+
+### Setup Notes
+
+```solidity
+pair = address(uint(keccak256(abi.encodePacked(
+        hex'ff',
+        factory,
+        keccak256(abi.encodePacked(token0, token1)),
+        // hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
+
+        // new init code hash computed from
+        //   keccak256(abi.encodePacked(bytecode))
+        //   at the function UniswapV2Factory.createPair()
+        // probably this happens since we are deploying to our testnet.
+        hex'0284ae99a354b043979214f24e12286d14737a5e651bf6757b39ecc3a6cef482'
+    ))));
+```

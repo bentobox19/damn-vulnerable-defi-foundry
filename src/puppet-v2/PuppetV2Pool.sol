@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-import "@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol";
+import "./HelperUniswapV2Library.sol";
 import "@uniswap/v2-periphery/contracts/libraries/SafeMath.sol";
 
 interface IERC20 {
