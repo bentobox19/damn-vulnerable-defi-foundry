@@ -6,7 +6,7 @@ import "../DamnValuableToken.sol";
 import "solmate/src/tokens/WETH.sol";
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
-// import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 interface IPuppetV2Pool {
   function borrow(uint256) external;
@@ -29,7 +29,7 @@ contract PuppetV2Level is StdAssertions, StdCheats {
   DamnValuableToken internal token;
   WETH internal weth;
   IUniswapV2Factory internal uniswapFactory;
-  // IUniswapV2Router01 internal uniswapRouter;
+  IUniswapV2Router01 internal uniswapRouter;
 
   function setup() external {
     vm.startPrank(deployer);
@@ -49,7 +49,6 @@ contract PuppetV2Level is StdAssertions, StdCheats {
         abi.encode(0x0000000000000000000000000000000000000000)
       )
     );
-    /*
     uniswapRouter = IUniswapV2Router01(
       deployCode(
         "uniswapV2Router02.sol",
@@ -59,7 +58,6 @@ contract PuppetV2Level is StdAssertions, StdCheats {
         )
       )
     );
-    */
 
     // Create Uniswap pair against WETH and add liquidity
     // token.approve(address(uniswapRouter), UNISWAP_INITIAL_TOKEN_RESERVE);
