@@ -534,19 +534,19 @@ lendingPool.borrow
 
 ## 09 Puppet V2
 
-### Setup Notes
+### Challenge Setup Notes
 
-* Initially we added the libs of uniswap2 as deps,
-* But there was this problem when referencing pairs
-* turns out that the function `blabla()` used a init code hash
-* that doesn't work on testsnets (need more investigation)
+* Initially we added the libs of uniswap2 as dependencies, referenced using interfaces.
+* But there was this problem when referencing created pairs: The function `pairFor()` at `UniswapV2Library.sol` uses a init code hash.
+* Some initial investigation points that this happens due to be working on testsnets.
 
-* solution was just copy the libraru files we needed into the challenges directory sources
-* and modify that line, that we compute from the function UniswapV2Factory.createPair()
+* Solution was just copy the library files we needed into the `puppet-v2` challenge's directory sources, and modify that line, computing the new init code hash from the function `UniswapV2Factory.createPair()`.
 
-* https://github.com/Uniswap/v2-core/issues/102
-* https://ethereum.stackexchange.com/questions/88075/uniswap-addliquidity-function-transaction-revert
-*
+* Some reference links
+  * https://github.com/Uniswap/v2-core/issues/102
+  * https://ethereum.stackexchange.com/questions/88075/uniswap-addliquidity-function-transaction-revert
+
+* Getting the new init code hash in place:
 
 ```solidity
 pair = address(uint(keccak256(abi.encodePacked(
@@ -559,7 +559,7 @@ pair = address(uint(keccak256(abi.encodePacked(
         //   keccak256(abi.encodePacked(bytecode))
         //   at the function UniswapV2Factory.createPair()
         // probably this happens since we are deploying to our testnet.
-        // needs more investigation.
+        // (needs more investigation!)
         hex'e091aae7c9eeedb6bff7e60c8e1a808d9cdc235f6b2e6e93284b02a4170f9361'
     ))));
 ```
