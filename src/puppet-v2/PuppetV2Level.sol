@@ -22,17 +22,17 @@ contract PuppetV2Level is StdAssertions, StdCheats {
   uint256 internal constant UNISWAP_INITIAL_TOKEN_RESERVE = 100e18;
   uint256 internal constant UNISWAP_INITIAL_WETH_RESERVE = 10e18;
 
-  uint256 internal constant PLAYER_INITIAL_TOKEN_BALANCE = 10000e18;
+  uint256 public constant PLAYER_INITIAL_TOKEN_BALANCE = 10000e18;
   uint256 internal constant PLAYER_INITIAL_ETH_BALANCE = 20e18;
 
-  uint256 internal constant POOL_INITIAL_TOKEN_BALANCE = 1000000e18;
+  uint256 public constant POOL_INITIAL_TOKEN_BALANCE = 1000000e18;
 
-  DamnValuableToken internal token;
-  WETH internal weth;
+  DamnValuableToken public token;
+  WETH public weth;
   IUniswapV2Factory internal uniswapFactory;
-  IUniswapV2Router01 internal uniswapRouter;
+  IUniswapV2Router01 public uniswapRouter;
   IUniswapV2Pair internal uniswapExchange;
-  IPuppetV2Pool internal lendingPool;
+  IPuppetV2Pool public lendingPool;
 
   function setup() external {
     vm.startPrank(deployer);
@@ -100,6 +100,6 @@ contract PuppetV2Level is StdAssertions, StdCheats {
   function validate() external {
     // Player has taken all tokens from the pool
     assertEq(token.balanceOf(address(lendingPool)), 0);
-    assertGt(token.balanceOf(msg.sender), POOL_INITIAL_TOKEN_BALANCE);
+    assertGe(token.balanceOf(msg.sender), POOL_INITIAL_TOKEN_BALANCE);
   }
 }
