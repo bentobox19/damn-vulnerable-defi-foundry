@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 import "./UnstoppableVault.sol";
 import "./ReceiverUnstoppable.sol";
-import "../DamnValuableToken.sol";
+import "../utils/DamnValuableToken.sol";
 
 contract UnstoppableLevel is StdAssertions {
   Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));

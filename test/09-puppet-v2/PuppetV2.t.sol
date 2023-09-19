@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 import "forge-std/Test.sol";
 import "../../src/puppet-v2/PuppetV2Level.sol";
 
-import "../../src/DamnValuableToken.sol";
+import "../../src/utils/DamnValuableToken.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "solmate/src/tokens/WETH.sol";
 
