@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "../utils/DamnValuableToken.sol";
+import "dvt/DamnValuableToken.sol";
 
 import "forge-std/console.sol";
 

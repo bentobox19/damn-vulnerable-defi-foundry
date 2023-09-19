@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
-import "../utils/DamnValuableToken.sol";
+import "dvt/DamnValuableToken.sol";
 import "solmate/src/tokens/WETH.sol";
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";

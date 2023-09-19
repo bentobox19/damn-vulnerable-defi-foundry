@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 import "./FlashLoanerPool.sol";
 import "./TheRewarderPool.sol";
-import "../utils/DamnValuableToken.sol";
+import "dvt/DamnValuableToken.sol";
 
 contract TheRewarderLevel is StdAssertions {
   Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
