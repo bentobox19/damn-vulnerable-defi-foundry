@@ -566,8 +566,7 @@ pair = address(uint(keccak256(abi.encodePacked(
         // new init code hash computed from
         //   keccak256(abi.encodePacked(bytecode))
         //   at the function UniswapV2Factory.createPair()
-        // probably this happens since we are deploying to our testnet.
-        // (needs more investigation!)
+        // needs more investigation for root cause.
         hex'e091aae7c9eeedb6bff7e60c8e1a808d9cdc235f6b2e6e93284b02a4170f9361'
     ))));
 ```

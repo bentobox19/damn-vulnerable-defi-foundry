@@ -26,9 +26,8 @@ library UniswapV2Library {
                 // new init code hash computed from
                 //   keccak256(abi.encodePacked(bytecode))
                 //   at the function UniswapV2Factory.createPair()
-                // probably this happens since we are deploying to our testnet.
-                // needs more investigation.
-                hex'e091aae7c9eeedb6bff7e60c8e1a808d9cdc235f6b2e6e93284b02a4170f9361'
+                // needs more investigation for root cause.
+                hex'fdf4c2d53899bbca7a9ce64d03cdd780819dc13ae00e452830bcd06e45253afd'
             ))));
     }
 
