@@ -567,7 +567,7 @@ pair = address(uint(keccak256(abi.encodePacked(
         //   keccak256(abi.encodePacked(bytecode))
         //   at the function UniswapV2Factory.createPair()
         // needs more investigation for root cause.
-        hex'e091aae7c9eeedb6bff7e60c8e1a808d9cdc235f6b2e6e93284b02a4170f9361'
+        hex'02e642e5ebf69d7adaeec0c1705e37436b815b8cf9add87b9bdde250db292961'
     ))));
 ```
 

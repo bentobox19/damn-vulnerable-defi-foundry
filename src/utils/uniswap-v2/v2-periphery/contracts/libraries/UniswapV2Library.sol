@@ -27,7 +27,7 @@ library UniswapV2Library {
                 //   keccak256(abi.encodePacked(bytecode))
                 //   at the function UniswapV2Factory.createPair()
                 // needs more investigation for root cause.
-                hex'fdf4c2d53899bbca7a9ce64d03cdd780819dc13ae00e452830bcd06e45253afd'
+                hex'02e642e5ebf69d7adaeec0c1705e37436b815b8cf9add87b9bdde250db292961'
             ))));
     }
 
