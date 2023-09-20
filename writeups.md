@@ -11,6 +11,7 @@
 - [07 Compromised](#07-compromised)
 - [08 Puppet](#08-puppet)
 - [09 Puppet V2](#09-puppet-v2)
+- [10 Free Rider](#10-free-rider)
 
 <!-- /MarkdownTOC -->
 
@@ -544,8 +545,9 @@ assertGe(token.balanceOf(msg.sender), POOL_INITIAL_TOKEN_BALANCE);
 
 ### Challenge Setup Notes
 
-* Initially we added the libs of uniswap2 as dependencies, referenced using interfaces.
-* But there was this problem when referencing created pairs: The function `pairFor()` at `UniswapV2Library.sol` uses a init code hash.
+#### Issue referencing created pairs
+
+* The function `pairFor()` at `UniswapV2Library.sol` uses a init code hash.
 * Some initial investigation points that this happens due to be working on a testnet.
 
 * Solution was just copy the library files we needed into the `puppet-v2` challenge's directory sources, and modify that line, computing the new init code hash from the function `UniswapV2Factory.createPair()`.
@@ -569,6 +571,27 @@ pair = address(uint(keccak256(abi.encodePacked(
         // needs more investigation for root cause.
         hex'02e642e5ebf69d7adaeec0c1705e37436b815b8cf9add87b9bdde250db292961'
     ))));
+```
+
+* The root cause is likely that solidity adds a hash of the filepath add the end of the bytecode.
+
+#### Avoiding solidity version errors
+
+The folowing code allows for the compilation and deploying of uniswap v2 code avoiding version conflicts
+
+```solidity
+// Deploy Uniswap Factory and Router
+uniswapFactory = IUniswapV2Factory(
+  deployCode(
+    "UniswapV2Factory.sol",
+    abi.encode(0x0000000000000000000000000000000000000000)));
+uniswapRouter = IUniswapV2Router01(
+  deployCode(
+    "uniswapV2Router02.sol",
+    abi.encode(
+      address(uniswapFactory),
+      address(weth)
+    )));
 ```
 
 ### Solution
@@ -599,3 +622,20 @@ weth.approve(address(lendingPool), weth_required);
 
 * https://docs.uniswap.org/contracts/v2/reference/smart-contracts/router-02#swapexacttokensforeth
 * https://github.com/transmissions11/solmate/blob/main/src/tokens/WETH.sol
+
+
+## 10 Free Rider
+
+To beat this level, we need to comply with
+
+```solidity
+// TODO
+```
+
+### Solution
+
+(TODO)
+
+### References
+
+(TODO)

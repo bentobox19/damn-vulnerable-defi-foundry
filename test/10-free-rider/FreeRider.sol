@@ -2,18 +2,17 @@
 pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
-// utils has setup() and validate() of this level
-// import "../../src/<level>/<LevelName>Level.sol";
+import "../../src/free-rider/FreeRiderLevel.sol";
 
-contract LevelTest is Test {
-  // <LevelName>Level level = new <LevelName>Level();
+contract FreeRiderTest is Test {
+  FreeRiderLevel level = new FreeRiderLevel();
 
   function setUp() public {
-    // level.setup()
+    level.setup();
   }
 
-  function _testExploit() public {
-    // level.validate()
+  function testExploit() public {
+    // level.validate();
   }
 }
 
