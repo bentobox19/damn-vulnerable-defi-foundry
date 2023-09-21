@@ -15,4 +15,3 @@ contract FreeRiderTest is Test {
     // level.validate();
   }
 }
-

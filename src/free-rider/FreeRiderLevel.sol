@@ -43,8 +43,7 @@ contract FreeRiderLevel is StdAssertions, StdCheats {
     vm.startPrank(deployer);
     vm.deal(deployer,
       UNISWAP_INITIAL_WETH_RESERVE +
-      MARKETPLACE_INITIAL_ETH_BALANCE +
-      BOUNTY
+      MARKETPLACE_INITIAL_ETH_BALANCE
     );
 
     // Player starts with limited ETH balance
@@ -101,7 +100,7 @@ contract FreeRiderLevel is StdAssertions, StdCheats {
         {value: MARKETPLACE_INITIAL_ETH_BALANCE}
         (AMOUNT_OF_NFTS);
 
-    // Deploy NFT contract
+    // Operate with NFT contract in marketplace
     nft = DamnValuableNFT(marketplace.token());
     assertEq(nft.owner(), 0x0000000000000000000000000000000000000000);
     assertEq(nft.rolesOf(address(marketplace)), nft.MINTER_ROLE());
@@ -121,6 +120,11 @@ contract FreeRiderLevel is StdAssertions, StdCheats {
     }
     marketplace.offerMany(tokenIds, prices);
     assertEq(marketplace.offersCount(), 6);
+
+    vm.stopPrank();
+
+    vm.startPrank(devs);
+    vm.deal(devs, BOUNTY);
 
     // Deploy devs' contract, adding the player as the beneficiary
     devsContract =
