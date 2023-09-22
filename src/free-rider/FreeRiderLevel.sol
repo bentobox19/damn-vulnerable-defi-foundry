@@ -18,7 +18,7 @@ contract FreeRiderLevel is StdAssertions, StdCheats {
   address payable private constant devs = payable(address(uint160(uint256(keccak256(abi.encodePacked("devs"))))));
 
   // The NFT marketplace will have 6 tokens, at 15 ETH each
-  uint256 internal constant NFT_PRICE = 15e18;
+  uint256 public constant NFT_PRICE = 15e18;
   uint256 internal constant AMOUNT_OF_NFTS = 6;
   uint256 internal constant MARKETPLACE_INITIAL_ETH_BALANCE = 90e18;
 
@@ -30,14 +30,14 @@ contract FreeRiderLevel is StdAssertions, StdCheats {
   uint256 internal constant UNISWAP_INITIAL_TOKEN_RESERVE = 15_000e18;
   uint256 internal constant UNISWAP_INITIAL_WETH_RESERVE = 9_000e18;
 
-  WETH internal weth;
-  DamnValuableNFT internal nft;
+  DamnValuableNFT public nft;
   DamnValuableToken internal token;
-  FreeRiderNFTMarketplace internal marketplace;
-  FreeRiderRecovery internal devsContract;
+  FreeRiderNFTMarketplace public marketplace;
+  FreeRiderRecovery public devsContract;
   IUniswapV2Factory internal uniswapFactory;
-  IUniswapV2Pair internal uniswapPair;
+  IUniswapV2Pair public uniswapPair;
   IUniswapV2Router01 internal uniswapRouter;
+  WETH public weth;
 
   function setup() external {
     vm.startPrank(deployer);
@@ -115,8 +115,8 @@ contract FreeRiderLevel is StdAssertions, StdCheats {
     uint256[] memory tokenIds = new uint256[](6);
     uint256[] memory prices = new uint256[](6);
     for (uint i = 0; i < 6; i++) {
-        tokenIds[i] = i;
-        prices[i] = NFT_PRICE;
+      tokenIds[i] = i;
+      prices[i] = NFT_PRICE;
     }
     marketplace.offerMany(tokenIds, prices);
     assertEq(marketplace.offersCount(), 6);
@@ -127,10 +127,11 @@ contract FreeRiderLevel is StdAssertions, StdCheats {
     vm.deal(devs, BOUNTY);
 
     // Deploy devs' contract, adding the player as the beneficiary
+    // Notice that we use tx.origin here.
     devsContract =
       new FreeRiderRecovery
         { value: BOUNTY }
-        (address(msg.sender), address(nft));
+        (address(tx.origin), address(nft));
 
     vm.stopPrank();
   }
@@ -153,4 +154,6 @@ contract FreeRiderLevel is StdAssertions, StdCheats {
     assertGt(address(msg.sender).balance, BOUNTY);
     assertEq(address(devsContract).balance, 0);
   }
+
+  receive() external payable {}
 }

@@ -628,14 +628,71 @@ weth.approve(address(lendingPool), weth_required);
 
 To beat this level, we need to comply with
 
+* The devs extract all NFTs from its associated contract
+* Exchange must have lost NFTs and ETH
+* Player must have earned all ETH
+
 ```solidity
-// TODO
+// The devs extract all NFTs from its associated contract
+vm.startPrank(devs);
+for (uint tokenId = 0; tokenId < AMOUNT_OF_NFTS; tokenId++) {
+  nft.transferFrom(address(devsContract), address(devs), tokenId);
+  assertEq(nft.ownerOf(tokenId), address(devs));
+}
+vm.stopPrank();
+
+// Exchange must have lost NFTs and ETH
+assertEq(marketplace.offersCount(), 0);
+assertLt(address(marketplace).balance,
+  MARKETPLACE_INITIAL_ETH_BALANCE);
+
+// Player must have earned all ETH
+assertGt(address(msg.sender).balance, BOUNTY);
+assertEq(address(devsContract).balance, 0);
 ```
 
 ### Solution
 
-(TODO)
+When `buyMany()` is invoked, all the checks happen at `_buyOne()`.
+
+Suppose we create an order of buying tokens `[0, 1, 2]`, each of value 1 ETH.
+We test our order sending as `msg.value`, 1 ETH. This is what happens.
+
+`_buyOne()` checks:
+
+* if `msg.value < priceToPay`, it errs `InsufficientPayment`.
+  * Notice that it compares _all the value we sent_ against the price of the asset.
+  * Meaning that in our example, we would have passed this check.
+
+Now comes the transfer itself
+
+```solidity
+// transfer from seller to buyer
+DamnValuableNFT _token = token; // cache for gas savings
+_token.safeTransferFrom(_token.ownerOf(tokenId), msg.sender, tokenId);
+
+// pay seller using cached token
+payable(_token.ownerOf(tokenId)).sendValue(priceToPay);
+```
+
+The contract will transfer the `tokenId` NFT to the sender, and contrary to what the
+commentary says, it is not the _seller_ the one receiving the funds: Once the transfer
+of the NFT is complete above, it is the _sender_ the one returned by `_token.ownerOf(tokenId)`.
+
+In other words, the sender of the contract would receive both the NFT and the sent funds.
+Allowing the attacker to gain the three NFTs of the example, reusing the sent funds and
+recovering them at the end.
+
+##### Summary of the solution
+
+* Prepare the order with the `tokenIds` `[0, 1, 2, 3, 4, 5]` for `15 ETH`.
+* Leverage the flash loan feature of the deployed Uniswap v2 pool to access these funds.
+* Send the obtained NFTs to the recovery contract and pocket the bounty.
 
 ### References
 
-(TODO)
+* https://eips.ethereum.org/EIPS/eip-721
+* https://docs.openzeppelin.com/contracts/2.x/api/token/erc721
+* https://docs.uniswap.org/contracts/v2/guides/smart-contract-integration/using-flash-swaps
+* https://github.com/Uniswap/v2-periphery/blob/master/contracts/examples/ExampleFlashSwap.sol
+* https://solidity-by-example.org/defi/uniswap-v2-flash-swap/
