@@ -17,3 +17,6 @@
 	path = lib/solady
 	url = https://github.com/vectorized/solady
 	branch = v0.0.85
+[submodule "lib/gnosis/safe-contracts"]
+	path = lib/gnosis/safe-contracts
+	url = https://github.com/safe-global/safe-contracts
