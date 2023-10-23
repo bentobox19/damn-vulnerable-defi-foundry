@@ -20,10 +20,10 @@ contract BackdoorLevel is StdAssertions, StdCheats {
 
   uint256 private constant AMOUNT_TOKENS_DISTRIBUTED = 40e18;
 
-  GnosisSafe private masterCopy;
-  GnosisSafeProxyFactory private walletFactory;
+  GnosisSafe public masterCopy;
+  GnosisSafeProxyFactory public walletFactory;
   DamnValuableToken private token;
-  WalletRegistry private walletRegistry;
+  WalletRegistry public walletRegistry;
 
   function setup() external {
     vm.startPrank(deployer);
