@@ -10,13 +10,13 @@ import "forge-std/Test.sol";
 
 contract BackdoorLevel is StdAssertions, StdCheats {
   Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-  address payable private constant deployer = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
-  address payable private constant alice = payable(address(uint160(uint256(keccak256(abi.encodePacked("alice"))))));
-  address payable private constant bob = payable(address(uint160(uint256(keccak256(abi.encodePacked("bob"))))));
-  address payable private constant charlie = payable(address(uint160(uint256(keccak256(abi.encodePacked("charlie"))))));
-  address payable private constant david = payable(address(uint160(uint256(keccak256(abi.encodePacked("david"))))));
-  address payable private constant player = payable(address(uint160(uint256(keccak256(abi.encodePacked("player"))))));
-  address[] private users = [alice, bob, charlie, david];
+  address payable private constant deployerAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
+  address payable public constant aliceAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("alice"))))));
+  address payable private constant bobAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("bob"))))));
+  address payable private constant charlieAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("charlie"))))));
+  address payable private constant davidAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("david"))))));
+  address payable private constant playerAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("player"))))));
+  address[] private users = [aliceAddress, bobAddress, charlieAddress, davidAddress];
 
   uint256 private constant AMOUNT_TOKENS_DISTRIBUTED = 40e18;
 
@@ -26,7 +26,7 @@ contract BackdoorLevel is StdAssertions, StdCheats {
   WalletRegistry public walletRegistry;
 
   function setup() external {
-    vm.startPrank(deployer);
+    vm.startPrank(deployerAddress);
 
     // Deploy Gnosis Safe master copy and factory contracts
     masterCopy = new GnosisSafe();
@@ -40,7 +40,7 @@ contract BackdoorLevel is StdAssertions, StdCheats {
       address(token),
       users
     );
-    assertEq(walletRegistry.owner(), deployer);
+    assertEq(walletRegistry.owner(), deployerAddress);
 
     vm.stopPrank();
 
@@ -56,7 +56,7 @@ contract BackdoorLevel is StdAssertions, StdCheats {
       vm.stopPrank();
     }
 
-    vm.startPrank(deployer);
+    vm.startPrank(deployerAddress);
 
     // Transfer tokens to be distributed to the registry
     token.transfer(address(walletRegistry), AMOUNT_TOKENS_DISTRIBUTED);
@@ -74,6 +74,6 @@ contract BackdoorLevel is StdAssertions, StdCheats {
       assertFalse(walletRegistry.beneficiaries(users[i]));
     }
 
-    assertEq(token.balanceOf(player), AMOUNT_TOKENS_DISTRIBUTED);
+    assertEq(token.balanceOf(playerAddress), AMOUNT_TOKENS_DISTRIBUTED);
   }
 }
