@@ -719,7 +719,7 @@ assertEq(token.balanceOf(playerAddress), AMOUNT_TOKENS_DISTRIBUTED);
 
 ### Solution
 
-OpenZeppelin reported in 12.MAR.2020 about the risks of enabling a DELEGATECALL to an arbitrary contract in the Gnosis Safe.
+OpenZeppelin [reported in 12.MAR.2020](https://blog.openzeppelin.com/backdooring-gnosis-safe-multisig-wallets) about the risks of enabling a DELEGATECALL to an arbitrary contract in the Gnosis Safe.
 
 Once set up, the created wallet is designed to receive a token transfer. However, a vulnerability arises as anyone, including potential attackers, can set up this wallet on behalf of the user, enabling them to earn these tokens during the callback of the creation process. The attack strategy involves crafting a contract with a function that contains the `token.approve(address,uint256)` function.
 
