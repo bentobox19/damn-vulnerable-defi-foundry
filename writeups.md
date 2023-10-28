@@ -13,6 +13,7 @@
 - [09 Puppet V2](#09-puppet-v2)
 - [10 Free Rider](#10-free-rider)
 - [11 Backdoor](#11-backdoor)
+- [12 Climber](#12-climber)
 
 <!-- /MarkdownTOC -->
 
@@ -774,3 +775,33 @@ for (uint8 i = 0; i < users.length; i++) {
 
 * https://blog.openzeppelin.com/backdooring-gnosis-safe-multisig-wallets
 
+## 12 Climber
+
+To beat this level, we need to comply with
+
+* Vault is drained, and the player got all its funds.
+
+```solidity
+assertEq(token.balanceOf(address(vault)), 0);
+assertEq(token.balanceOf(playerAddress), VAULT_TOKEN_BALANCE);
+```
+
+### Solution
+
+* We notice that the owner of the `vault` is the instance of the `ClimberTimelock` contract.
+* The `ClimberTimelock` contract has a function `execute()` that can be called by everybody. However, it will only execute the given commands by checking from an "operation id" that is computed from the parameters that its status is `OperationState.ReadyForExecution`.
+* To be `ReadyForExecution`, we need to pass the same parameters to the contract `schedule()` function. This function requires the `PROPOSER_ROLE`. Also, the operation won't be ready until we set the `delay` variable to `0`.
+* On the side of the `ClimberVault` contract, while there is a `sweeper` role, there is not a clear way to set it nor enable it. Since we could leverage the owner privileges with the `execute()` function, however, we can just upgrade the contract to one which initialization gives a `transfer` to the player.
+* Then, the solution of the level is built the following way:
+  * Leverage the `execution()` function with 4 commands:
+    * First, we give the `PROPOSER_ROLE` to an `AttackerSchedule` contract.
+    * Then, we upgrade the `ClimberVault` instance by an instance of `AttackerVault`.
+    * We update the `delay` to `0` so this operation is marked as `ReadyForExecution`.
+    * Finally, the `AttackerSchedule` instance, having received the parameters to be sent to `execute()`, will call `schedule()` to update the status of the operation.
+* Calling `execute()` will transfer the funds to the `playerAddress`, completing the challenge.
+
+### References
+
+* https://docs.openzeppelin.com/contracts/3.x/api/utils#Address-functionCallWithValue-address-bytes-uint256-
+* https://eips.ethereum.org/EIPS/eip-1822
+* https://docs.openzeppelin.com/contracts/5.x/api/access

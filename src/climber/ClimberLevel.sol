@@ -11,12 +11,12 @@ import "forge-std/Test.sol";
 contract ClimberLevel is StdAssertions, StdCheats {
   Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
   address payable private constant deployerAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
-  address payable private constant playerAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("player"))))));
+  address payable public constant playerAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("player"))))));
   address payable private constant proposerAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("proposer"))))));
   address payable private constant sweeperAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("sweeper"))))));
 
-  ClimberVault private vault;
-  ClimberTimelock private timelock;
+  ClimberVault public vault;
+  ClimberTimelock public timelock;
   DamnValuableToken public token;
 
   uint256 private constant PLAYER_INITIAL_ETH_BALANCE = 1e17;
