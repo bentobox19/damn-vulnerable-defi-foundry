@@ -21,13 +21,14 @@ library UniswapV2Library {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                // hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
-
-                // new init code hash computed from
+                // New hash computed with
                 //   keccak256(abi.encodePacked(bytecode))
                 //   at the function UniswapV2Factory.createPair()
-                // needs more investigation for root cause.
-                hex'02e642e5ebf69d7adaeec0c1705e37436b815b8cf9add87b9bdde250db292961'
+                //
+                // This bytecode varies based on factors like the smart contract's
+                // filetype, so if you plan to use your custom Uniswap v2 code,
+                // be prepared to encounter this situation.
+                hex'2cf7b97493bb4520676f5dcc13f7ad00f86d1e89036a63f61142905ec3787d49'
             ))));
     }
 
