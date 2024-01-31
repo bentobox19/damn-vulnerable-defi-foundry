@@ -45,8 +45,15 @@ contract WalletMiningLevel is StdAssertions {
     );
     authorizer = AuthorizerUpgradeable(address(proxy));
 
+    assertEq(authorizer.owner(), deployerAddress);
+    assertTrue(authorizer.can(wardAddress, DEPOSIT_ADDRESS));
+    assertFalse(authorizer.can(playerAddress, DEPOSIT_ADDRESS));
+
     // Deploy Safe Deployer contract
     walletDeployer = new WalletDeployer(address(token));
+
+    assertEq(walletDeployer.chief(), deployerAddress);
+    assertEq(walletDeployer.gem(), address(token));
 
     // Set Authorizer in Safe Deployer
     walletDeployer.rule(address(authorizer));
