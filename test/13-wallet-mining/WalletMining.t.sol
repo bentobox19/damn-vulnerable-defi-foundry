@@ -13,7 +13,7 @@ contract WalletMiningTest is Test {
   }
 
   function testExploit() public {
-    // level.validate()
+    // level.validate();
   }
 }
 

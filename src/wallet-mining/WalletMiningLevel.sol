@@ -57,24 +57,51 @@ contract WalletMiningLevel is StdAssertions {
 
     // Set Authorizer in Safe Deployer
     walletDeployer.rule(address(authorizer));
+    assertEq(walletDeployer.mom(), address(authorizer));
+
+    assertTrue(walletDeployer.can(wardAddress, DEPOSIT_ADDRESS)); // won't revert
+    // Expression below will revert:
+    //   - Unable to catch, nor using cheatcode expectRevert().
+    //   - Needs more work to find root cause.
+    // walletDeployer.can(playerAddress, DEPOSIT_ADDRESS);
 
     // Fund Safe Deployer with tokens
     initialWalletDeployerTokenBalance = walletDeployer.pay() * 43;
     token.transfer(address(walletDeployer), initialWalletDeployerTokenBalance);
 
     // Ensure these accounts start empty
-    // ?
+    assertEq(DEPOSIT_ADDRESS.code, "");
+    assertEq(address(walletDeployer.fact()).code, "");
+    assertEq(address(walletDeployer.copy()).code, "");
 
     // Deposit large amount of DVT tokens to the deposit address
     token.transfer(DEPOSIT_ADDRESS, DEPOSIT_TOKEN_AMOUNT);
 
     // Ensure initial balances are set correctly
-    // ?
+    assertEq(token.balanceOf(DEPOSIT_ADDRESS), DEPOSIT_TOKEN_AMOUNT);
+    assertEq(token.balanceOf(address(walletDeployer)), initialWalletDeployerTokenBalance);
+    assertEq(token.balanceOf(playerAddress), 0);
 
     vm.stopPrank();
    }
 
   function validate() external {
-    // ?
+    // Factory account must have code
+    assertTrue(address(walletDeployer.fact()).code.length > 0);
+
+    // Master copy account must have code
+    assertTrue(address(walletDeployer.copy()).code.length > 0);
+
+    // Deposit account must have code
+    assertTrue(DEPOSIT_ADDRESS.code.length > 0);
+
+    // The deposit address and the Safe Deployer contract must not hold tokens
+    assertEq(token.balanceOf(DEPOSIT_ADDRESS), 0);
+    assertEq(token.balanceOf(address(walletDeployer)), 0);
+
+    // Player must own all tokens
+    assertEq(
+      token.balanceOf(playerAddress),
+      initialWalletDeployerTokenBalance + DEPOSIT_TOKEN_AMOUNT);
   }
 }
