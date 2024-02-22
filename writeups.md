@@ -14,6 +14,7 @@
 - [10 Free Rider](#10-free-rider)
 - [11 Backdoor](#11-backdoor)
 - [12 Climber](#12-climber)
+- [13 Wallet Mining](#13-wallet-mining)
 
 <!-- /MarkdownTOC -->
 
@@ -897,3 +898,37 @@ timelock.execute(targets, values, dataElements, salt);
 * https://docs.openzeppelin.com/contracts/3.x/api/utils#Address-functionCallWithValue-address-bytes-uint256-
 * https://eips.ethereum.org/EIPS/eip-1822
 * https://docs.openzeppelin.com/contracts/5.x/api/access
+
+## 13 Wallet Mining
+
+To beat this level, we need to comply with
+
+* ???
+
+```solidity
+```
+
+### Analysis
+
+* ???
+
+* 0x9B6fb606A9f5789444c17768c6dFCF2f83563801
+
+### Solution
+
+* ???
+* Must be able to explain the 20M $OP hack first
+
+### References
+
+
+* https://mirror.xyz/0xbuidlerdao.eth/lOE5VN-BHI0olGOXe27F0auviIuoSlnou_9t3XRJseY
+
+* Explicar como la cosa no tiene esto
+  * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
+  * A partir de `Spurius Dragon`, Block 2,675,000.
+  * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-607.md
+
+* Considering to add
+  * https://inspexco.medium.com/how-20-million-op-was-stolen-from-the-multisig-wallet-not-yet-owned-by-wintermute-3f6c75db740a
+  * https://techfi.tech/the-exploit-on-optimism-what-if-you-are-too-optimistic/
