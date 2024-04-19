@@ -901,7 +901,7 @@ timelock.execute(targets, values, dataElements, salt);
 
 ## 13 Wallet Mining
 
-To beat this level, we need to comply with
+To beat this level, we need to comply with:
 
 * Be able to deploy code at the given addresses.
 * Drain the given deposit address and the wallet deployer contract into the player's account.
@@ -928,7 +928,21 @@ assertEq(
 
 ### Solution
 
-The first Task 1 involves draining the funds from the address `0x9B6fb606A9f5789444c17768c6dFCF2f83563801`. The funds were initially transferred to this empty address. It is assumed that this address was intended to be a Gnosis Safe wallet that has not yet been deployed. The Gnosis Safe Factory, which should be located at `0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B`, is also not deployed.
+Goals can be summarized as
+
+* Drain the deposit address `0x9B6fb6`.
+  * Deploy the Gnosis Safe `0x76E2cF` at this chain via replay attack.
+  * Deploy the master copy `0x34CfAC` at this chain via replay attack.
+  * Generate a wallet from a custom contract with the address `0x9B6fb6`.
+
+* Drain the walletDeployer contract.
+  * Take ownership of the proxy's implementation contract.
+  * Exploit `upgradeToAndCall` to destroy this contract.
+  * Call walletDeployer's `drop` to drain it.
+
+#### Drain the deposit address 0x9B6fb6.
+
+The first task involves draining the funds from the address `0x9B6fb606A9f5789444c17768c6dFCF2f83563801`. The funds were initially transferred to this empty address. It is assumed that this address was intended to be a Gnosis Safe wallet that has not yet been deployed. The Gnosis Safe Factory, which should be located at `0x76E2cFc1F5Fa8F6a5b3fC4c8F4788F0116861F9B`, is also not deployed.
 
 The initial step in resolving this issue involves examining the address on Etherscan, we find the deployer, which in etherscan is identified as "Safe: Deployer 3". There, in etherscan, there is the raw transaction of the deployment of the factory. Pre EIP-155 we could just replay the transaction in other networks, which is what happened at Optimism with Gnosis Safe.
 
@@ -984,7 +998,67 @@ AttackerWallet(address(wallet))
     level.DEPOSIT_TOKEN_AMOUNT());
 ```
 
+#### Drain the walletDeployer contract.
+
+The attack exploits this check made by the `can()` function, after calling the authorizer proxy
+
+```solidity
+if and(not(iszero(returndatasize())), iszero(mload(p))) {return(0,0)}
+```
+
+The logic of this line can be seen as
+
+```
+              +---------------------------+
+              | Is `returndatasize` != 0? |
+              +---------------------------+
+          No                | Yes
+          |                 V
+ +---------------------+   +---------------------------------------+
+ | Pass (move forward) |   | Did the `can` function return `true`? |
+ +---------------------+   +---------------------------------------+
+                           | No             | Yes
+                           V                V
+              +------------------+    +---------------------+
+              | Return `0`       |    | Pass (move forward) |
+              +------------------+    +---------------------+
+```
+
+Then, if we find a way for the proxy to not return data, we can bypass the control at `can()`, suceeding in draining the walletDeployer via the `drop()` function.
+
+Let's review the implementation contract in the proxy. The `init()` function is called via the proxy. Due to the `initializer` modifier, it operates within the proxy's storage context, allowing the function to be invoked directly on the contract.
+
+Open Zeppelin advises:
+
+1. Make all initializers idempotent.
+2. To secure the `init()` in the implementation contract against direct use, invoke `_disableInitializers` in the constructor to lock it at deployment.
+
+The implementation contract is thus vulnerable to an attacker calling `init()`, which, among other things, will give ownership of the contract to the caller.
+
+```solidity
+AuthorizerUpgradeable authorizer = AuthorizerUpgradeable(address(level.implementation()));
+address[] memory param01 = new address[](1);
+param01[0] = 0x0000000000000000000000000000000000000000;
+address[] memory param02 = new address[](1);
+param02[0] = 0x0000000000000000000000000000000000000000;
+authorizer.init(param01, param02);
+```
+
+After becoming owners via `init()`, we can call `upgradeToAndCall()`. This function makes a delegate call to the provided function. If `selfdestruct()` is called within this function, it will destroy the implementation contract, not the proxy.
+
+Thus, when the walletDeployer invokes the proxy, the proxy then makes a delegate call to the implementation contract:
+
+```solidity
+   let result := delegatecall(gas(), implementation, 0, calldatasize(), 0, 0)
+```
+
+Since the implementation was just destroyed, this `delegatecall` will fail (not revert), and the proxy function will produce a `returndatasize` of zero. This outcome enables us to bypass the check and drain the contract.
+
+
+Finally we just invoke `drop()` to complete the level.
+
 ### References
 
 * https://mirror.xyz/0xbuidlerdao.eth/lOE5VN-BHI0olGOXe27F0auviIuoSlnou_9t3XRJseY
 * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
+* https://docs.openzeppelin.com/contracts/4.x/api/proxy

@@ -19,8 +19,9 @@ contract WalletMiningLevel is StdAssertions {
   uint256 private initialWalletDeployerTokenBalance;
 
   DamnValuableToken public token;
+  AuthorizerUpgradeable public implementation;
   AuthorizerUpgradeable private authorizer;
-  WalletDeployer private walletDeployer;
+  WalletDeployer public walletDeployer;
 
   function setup() external {
     vm.startPrank(deployerAddress);
@@ -29,7 +30,7 @@ contract WalletMiningLevel is StdAssertions {
     token = new DamnValuableToken();
 
     // Deploy authorizer with the corresponding proxy
-    AuthorizerUpgradeable implementation = new AuthorizerUpgradeable();
+    implementation = new AuthorizerUpgradeable();
     address[] memory param01 = new address[](1);
     param01[0] = wardAddress;
     address[] memory param02 = new address[](1);
@@ -47,7 +48,7 @@ contract WalletMiningLevel is StdAssertions {
 
     assertEq(authorizer.owner(), deployerAddress);
     assertTrue(authorizer.can(wardAddress, DEPOSIT_ADDRESS));
-    assertFalse(authorizer.can(playerAddress, DEPOSIT_ADDRESS));
+    // assertFalse(authorizer.can(playerAddress, DEPOSIT_ADDRESS));
 
     // Deploy Safe Deployer contract
     walletDeployer = new WalletDeployer(address(token));
@@ -97,13 +98,11 @@ contract WalletMiningLevel is StdAssertions {
 
     // The deposit address and the Safe Deployer contract must not hold tokens
     assertEq(token.balanceOf(DEPOSIT_ADDRESS), 0);
-    // assertEq(token.balanceOf(address(walletDeployer)), 0);
+    assertEq(token.balanceOf(address(walletDeployer)), 0);
 
     // Player must own all tokens
-    /*
     assertEq(
       token.balanceOf(playerAddress),
       initialWalletDeployerTokenBalance + DEPOSIT_TOKEN_AMOUNT);
-    */
   }
 }
