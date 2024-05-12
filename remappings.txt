@@ -1,13 +1,15 @@
+dvt/=src/utils/dvt/
+
+@gnosis.pm/safe-contracts/contracts=lib/gnosis/safe-contracts/contracts
+
 @openzeppelin/contracts=lib/openzeppelin-contracts/contracts/
 @openzeppelin/contracts-upgradeable=lib/openzeppelin-contracts-upgradeable/contracts/
 
 solady/=lib/solady/
 solmate/=lib/solmate/
 
-dvt/=src/utils/dvt/
-
 @uniswap/v2-core=src/utils/uniswap-v2/v2-core
 @uniswap/v2-periphery=src/utils/uniswap-v2/v2-periphery
-@uniswap/lib=src/utils/uniswap-v2/lib
 
-@gnosis.pm/safe-contracts/contracts=lib/gnosis/safe-contracts/contracts
+@uniswap/v3-core=src/utils/uniswap-v3/v3-core
+@uniswap/v3-periphery=src/utils/uniswap-v3/v3-periphery

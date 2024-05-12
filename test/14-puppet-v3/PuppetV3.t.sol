@@ -2,17 +2,16 @@
 pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
-// utils has setup() and validate() of this level
-// import "../../src/<level>/<LevelName>Level.sol";
+import "../../src/puppet-v3/PuppetV3Level.sol";
 
-contract LevelTest is Test {
+contract PuppetV3Test is Test {
   // <LevelName>Level level = new <LevelName>Level();
 
   function setUp() public {
     // level.setup()
   }
 
-  function _testExploit() public {
+  function testExploit() public {
     // level.validate()
   }
 }
