@@ -559,24 +559,33 @@ assertGe(token.balanceOf(msg.sender), POOL_INITIAL_TOKEN_BALANCE);
   * https://github.com/Uniswap/v2-core/issues/102
   * https://ethereum.stackexchange.com/questions/88075/uniswap-addliquidity-function-transaction-revert
 
-* Getting the new init code hash in place:
+* Getting the new init code hash in place (at `utils/uniswap-v2/v2-periphery/contracts/libraries/UniswapV2Library.sol`):
 
 ```solidity
-pair = address(uint(keccak256(abi.encodePacked(
-        hex'ff',
-        factory,
-        keccak256(abi.encodePacked(token0, token1)),
-        // hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
-
-        // new init code hash computed from
-        //   keccak256(abi.encodePacked(bytecode))
-        //   at the function UniswapV2Factory.createPair()
-        // needs more investigation for root cause.
-        hex'02e642e5ebf69d7adaeec0c1705e37436b815b8cf9add87b9bdde250db292961'
-    ))));
+  function pairFor(address factory, address tokenA, address tokenB) internal pure returns (address pair) {
+      (address token0, address token1) = sortTokens(tokenA, tokenB);
+      pair = address(uint(keccak256(abi.encodePacked(
+              hex'ff',
+              factory,
+              keccak256(abi.encodePacked(token0, token1)),
+             // New hash computed at the function UniswapV2Factory.createPair()
+              //
+              //   import "forge-std/Console.sol";
+              //
+              //   console.logBytes32(keccak256(abi.encodePacked(bytecode)));
+              //   // (just after the line)
+              //
+              //   bytes memory bytecode = type(UniswapV2Pair).creationCode;
+              //
+              // This bytecode varies based on factors like the smart contract's
+              // filetype, so if you plan to use your custom Uniswap v2 code,
+              // be prepared to encounter this situation.
+              hex'9d177c45a5041605b37e4e3fc753594ee3be8109195c6510bcec0cd6ca36ae48'
+          ))));
+  }
 ```
 
-* The root cause is likely that solidity adds a hash of the filepath add the end of the bytecode.
+* The root cause is likely that solidity adds a hash of the filepath add the end of the bytecode when compiling.
 
 #### Avoiding solidity version errors
 
@@ -584,13 +593,15 @@ The folowing code allows for the compilation and deploying of uniswap v2 code av
 
 ```solidity
 // Deploy Uniswap Factory and Router
+// why with deployCode() you ask?
+// To avoid problems with the version police!
 uniswapFactory = IUniswapV2Factory(
   deployCode(
-    "UniswapV2Factory.sol",
+    "out/UniswapV2Factory.sol:UniswapV2Factory",
     abi.encode(0x0000000000000000000000000000000000000000)));
 uniswapRouter = IUniswapV2Router01(
   deployCode(
-    "uniswapV2Router02.sol",
+    "out/UniswapV2Router02.sol:UniswapV2Router02",
     abi.encode(
       address(uniswapFactory),
       address(weth)

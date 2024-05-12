@@ -21,14 +21,19 @@ library UniswapV2Library {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                // New hash computed with
-                //   keccak256(abi.encodePacked(bytecode))
-                //   at the function UniswapV2Factory.createPair()
+               // New hash computed at the function UniswapV2Factory.createPair()
+                //
+                //   import "forge-std/Console.sol";
+                //
+                //   console.logBytes32(keccak256(abi.encodePacked(bytecode)));
+                //   // (just after the line)
+                //
+                //   bytes memory bytecode = type(UniswapV2Pair).creationCode;
                 //
                 // This bytecode varies based on factors like the smart contract's
                 // filetype, so if you plan to use your custom Uniswap v2 code,
                 // be prepared to encounter this situation.
-                hex'2cf7b97493bb4520676f5dcc13f7ad00f86d1e89036a63f61142905ec3787d49'
+                hex'9d177c45a5041605b37e4e3fc753594ee3be8109195c6510bcec0cd6ca36ae48'
             ))));
     }
 

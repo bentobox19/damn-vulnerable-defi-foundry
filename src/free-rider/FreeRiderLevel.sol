@@ -61,11 +61,11 @@ contract FreeRiderLevel is StdAssertions, StdCheats {
     // To avoid problems with the version police!
     uniswapFactory = IUniswapV2Factory(
       deployCode(
-        "UniswapV2Factory.sol",
+        "out/UniswapV2Factory.sol:UniswapV2Factory",
         abi.encode(0x0000000000000000000000000000000000000000)));
     uniswapRouter = IUniswapV2Router01(
       deployCode(
-        "uniswapV2Router02.sol",
+        "out/UniswapV2Router02.sol:UniswapV2Router02",
         abi.encode(
           address(uniswapFactory),
           address(weth)
