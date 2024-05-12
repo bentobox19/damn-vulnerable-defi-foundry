@@ -46,13 +46,15 @@ contract PuppetV2Level is StdAssertions, StdCheats {
     weth = new WETH();
 
     // Deploy Uniswap Factory and Router
+    // why with deployCode() you ask?
+    // To avoid problems with the version police!
     uniswapFactory = IUniswapV2Factory(
       deployCode(
-        "UniswapV2Factory.sol",
+        "out/UniswapV2Factory.sol:UniswapV2Factory",
         abi.encode(0x0000000000000000000000000000000000000000)));
     uniswapRouter = IUniswapV2Router01(
       deployCode(
-        "uniswapV2Router02.sol",
+        "out/UniswapV2Router02.sol:UniswapV2Router02",
         abi.encode(
           address(uniswapFactory),
           address(weth)
@@ -77,7 +79,7 @@ contract PuppetV2Level is StdAssertions, StdCheats {
     // Deploy the lending pool
     lendingPool = IPuppetV2Pool(
       deployCode(
-        "PuppetV2Pool.sol",
+        "out/PuppetV2Pool.sol:PuppetV2Pool",
         abi.encode(
           address(weth),
           address(token),
