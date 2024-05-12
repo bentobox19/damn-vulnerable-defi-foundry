@@ -22,6 +22,17 @@ forge install
 forge test
 ```
 
+### Preparations
+
+Create an `.env` file. You can copy the sample `.env-sample`:
+
+```
+export RPC_URL=https://eth-mainnet.g.alchemy.com/v2/9yUn7YrS814EkZ-2xI0Ex0VFHcPAUmRw
+export BLOCK_NUMBER=15450164
+```
+
+Note: _This is ony for problem 14 - Puppet v3, which needs to fork from mainnet_.
+
 ## Running a single challenge
 
 ```bash

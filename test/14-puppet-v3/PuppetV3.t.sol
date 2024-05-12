@@ -5,13 +5,13 @@ import "forge-std/Test.sol";
 import "../../src/puppet-v3/PuppetV3Level.sol";
 
 contract PuppetV3Test is Test {
-  // <LevelName>Level level = new <LevelName>Level();
+  PuppetV3Level level = new PuppetV3Level();
 
   function setUp() public {
-    // level.setup()
+    level.setup();
   }
 
   function testExploit() public {
-    // level.validate()
+    // level.validate();
   }
 }
