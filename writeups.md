@@ -15,6 +15,7 @@
 - [11 Backdoor](#11-backdoor)
 - [12 Climber](#12-climber)
 - [13 Wallet Mining](#13-wallet-mining)
+- [14 Puppet V3](#14-puppet-v3)
 
 <!-- /MarkdownTOC -->
 
@@ -1073,3 +1074,29 @@ Finally we just invoke `drop()` to complete the level.
 * https://mirror.xyz/0xbuidlerdao.eth/lOE5VN-BHI0olGOXe27F0auviIuoSlnou_9t3XRJseY
 * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
 * https://docs.openzeppelin.com/contracts/4.x/api/proxy
+
+## 14 Puppet V3
+
+### Setup notes
+
+#### Dependency fix
+
+Tried to remap, but in the end we needed to update the dependencies at ``:
+
+```solidity
+import '@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol';
+import '@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol';
+```
+
+to
+
+```solidity
+import '@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol';
+import '@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol';
+```
+
+#### Conversion at `PoolAddress.sol`
+
+See issue: https://github.com/Uniswap/v3-periphery/pull/271
+
+Moved from `uint256` to an additional cast to `uint160`.

@@ -2,9 +2,10 @@
 pragma solidity >=0.8.0;
 
 import "forge-std/Test.sol";
-import "solmate/src/tokens/WETH.sol";
+import "dvt/DamnValuableToken.sol";
 
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 
 interface IWETH {
     function balanceOf(address) external returns (uint256);
@@ -28,23 +29,52 @@ library StringExtensions {
   }
 }
 
+library Math {
+    // babylonian method (https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method)
+    function sqrt(uint256 y) internal pure returns (uint256 z) {
+        if (y > 3) {
+            z = y;
+            uint x = y / 2 + 1;
+            while (x < z) {
+                z = x;
+                x = (y / x + x) / 2;
+            }
+        } else if (y != 0) {
+            z = 1;
+        }
+    }
+
+    // https://github.com/Uniswap/v3-periphery/blob/5bcdd9f67f9394f3159dad80d0dd01d37ca08c66/test/shared/encodePriceSqrt.ts
+    function encodePriceSqrt(uint256 reserve1, uint256 reserve0) internal pure returns (uint160) {
+        require(reserve0 > 0, "Divide by zero");
+        require(reserve1 > 0, "Divide by zero");
+
+        // First, calculate the ratio as a scaled integer
+        uint256 ratio = (reserve1 * 2**96) / reserve0;
+
+        // Then, calculate the square root of the ratio
+        uint160 priceSqrt = uint160(sqrt(ratio));
+        return priceSqrt;
+    }
+}
+
 contract PuppetV3Level is StdAssertions, StdCheats {
   using StringExtensions for string;
 
   Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
-  address public constant deployerAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
-  address public constant playerAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("player"))))));
-
+  address internal constant deployerAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("deployer"))))));
+  address internal constant playerAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked("player"))))));
 
   uint256 internal constant UNISWAP_INITIAL_TOKEN_LIQUIDITY = 100e18;
   uint256 internal constant UNISWAP_INITIAL_WETH_LIQUIDITY = 100e18;
-
   uint256 internal constant PLAYER_INITIAL_TOKEN_BALANCE = 110e18;
   uint256 internal constant PLAYER_INITIAL_ETH_BALANCE = 1e18;
   uint256 internal constant DEPLOYER_INITIAL_ETH_BALANCE = 200e18;
-
   uint256 internal constant LENDING_POOL_INITIAL_TOKEN_BALANCE = 1_000_000e18;
+  uint24 internal constant FEE = 3000; // 0.3%
+
+  DamnValuableToken internal token;
 
   constructor() {
     string memory RPC_URL = vm.envString("RPC_URL");
@@ -71,26 +101,27 @@ contract PuppetV3Level is StdAssertions, StdCheats {
     weth.deposit{value: UNISWAP_INITIAL_WETH_LIQUIDITY}();
     assertEq(weth.balanceOf(deployerAddress), UNISWAP_INITIAL_WETH_LIQUIDITY);
 
+    // Deploy DVT token. This is the token to be traded against WETH in the Uniswap v3 pool.
+    token = new DamnValuableToken();
+
+    // Create the Uniswap v3 pool
+    INonfungiblePositionManager uniswapPositionManager = INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
+
+
+    // This REVERTS, and I have to fix it in the next coding session.
+
+    uniswapPositionManager.createAndInitializePoolIfNecessary(
+      address(weth),
+      address(token),
+      FEE,
+      Math.encodePriceSqrt(1,1)
+    );
+
     /*
-      // Deploy DVT token. This is the token to be traded against WETH in the Uniswap v3 pool.
-      token = await (await ethers.getContractFactory('DamnValuableToken', deployer)).deploy();
+    address uniswapPoolAddress = uniswapFactory.getPool(address(weth), address(token), FEE);
+    */
 
-      // Create the Uniswap v3 pool
-      uniswapPositionManager = new ethers.Contract("0xC36442b4a4522E871399CD717aBDD847Ab11FE88", positionManagerJson.abi, deployer);
-      const FEE = 3000; // 0.3%
-      await uniswapPositionManager.createAndInitializePoolIfNecessary(
-          weth.address,  // token0
-          token.address, // token1
-          FEE,
-          encodePriceSqrt(1, 1),
-          { gasLimit: 5000000 }
-      );
-
-      let uniswapPoolAddress = await uniswapFactory.getPool(
-          weth.address,
-          token.address,
-          FEE
-      );
+    /*
       uniswapPool = new ethers.Contract(uniswapPoolAddress, poolJson.abi, deployer);
       await uniswapPool.increaseObservationCardinalityNext(40);
 
