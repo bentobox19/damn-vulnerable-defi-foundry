@@ -107,19 +107,25 @@ contract PuppetV3Level is StdAssertions, StdCheats {
     // Create the Uniswap v3 pool
     INonfungiblePositionManager uniswapPositionManager = INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
 
-
-    // This REVERTS, and I have to fix it in the next coding session.
+    // createAndInitializePoolIfNecessary() has the guardian `require(token0 < token1)`.
+    address token0;
+    address token1;
+    if (address(token) < address(weth)) {
+      token0 = address(token);
+      token1 = address(weth);
+    } else {
+      token0 = address(weth);
+      token1 = address(token);
+    }
 
     uniswapPositionManager.createAndInitializePoolIfNecessary(
-      address(weth),
-      address(token),
+      token0,
+      token1,
       FEE,
       Math.encodePriceSqrt(1,1)
     );
 
-    /*
     address uniswapPoolAddress = uniswapFactory.getPool(address(weth), address(token), FEE);
-    */
 
     /*
       uniswapPool = new ethers.Contract(uniswapPoolAddress, poolJson.abi, deployer);
