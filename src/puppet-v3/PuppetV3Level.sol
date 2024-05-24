@@ -5,13 +5,19 @@ import "forge-std/Test.sol";
 import "dvt/DamnValuableToken.sol";
 
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
+import "@uniswap/v3-core/contracts/interfaces/pool/IUniswapV3PoolActions.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 
 interface IWETH {
     function balanceOf(address) external returns (uint256);
     function deposit() external payable;
-    // function transfer(address to, uint value) external returns (bool);
-    // function withdraw(uint) external;
+    function approve(address spender, uint256 amount) external;
+    // function transfer(address to, uint256 amount) external returns (bool);
+    // function withdraw(uint256 amount) external;
+}
+
+interface IPuppetV3Pool {
+  // ?
 }
 
 // I don't think I'll use this code elsewhere
@@ -72,9 +78,11 @@ contract PuppetV3Level is StdAssertions, StdCheats {
   uint256 internal constant PLAYER_INITIAL_ETH_BALANCE = 1e18;
   uint256 internal constant DEPLOYER_INITIAL_ETH_BALANCE = 200e18;
   uint256 internal constant LENDING_POOL_INITIAL_TOKEN_BALANCE = 1_000_000e18;
+  uint256 constant MAX_UINT256 = type(uint256).max;
   uint24 internal constant FEE = 3000; // 0.3%
 
   DamnValuableToken internal token;
+  IPuppetV3Pool internal lendingPool;
 
   constructor() {
     string memory RPC_URL = vm.envString("RPC_URL");
@@ -126,39 +134,43 @@ contract PuppetV3Level is StdAssertions, StdCheats {
     );
 
     address uniswapPoolAddress = uniswapFactory.getPool(address(weth), address(token), FEE);
+    IUniswapV3PoolActions uniswapPool = IUniswapV3PoolActions(uniswapPoolAddress);
+    uniswapPool.increaseObservationCardinalityNext(40);
+
+    // Deployer adds liquidity at current price to Uniswap V3 exchange
+    weth.approve(address(uniswapPositionManager), MAX_UINT256);
+    token.approve(address(uniswapPositionManager), MAX_UINT256);
+    uniswapPositionManager.mint(
+      INonfungiblePositionManager.MintParams({
+        token0: token0,
+        token1: token1,
+        fee: FEE,
+        tickLower: -60,
+        tickUpper: 60,
+        amount0Desired: UNISWAP_INITIAL_WETH_LIQUIDITY,
+        amount1Desired: UNISWAP_INITIAL_TOKEN_LIQUIDITY,
+        amount0Min: 0,
+        amount1Min: 0,
+        recipient: deployerAddress,
+        deadline: block.timestamp * 2
+      })
+    );
+
+    // Deploy the lending pool
+    lendingPool = IPuppetV3Pool(
+      deployCode(
+        "out/PuppetV3Pool.sol:PuppetV3Pool",
+        abi.encode(
+          address(weth),
+          address(token),
+          uniswapPoolAddress
+        )));
+
+    // Setup initial token balances of lending pool and player
+    token.transfer(playerAddress, PLAYER_INITIAL_TOKEN_BALANCE);
+    token.transfer(address(lendingPool), LENDING_POOL_INITIAL_TOKEN_BALANCE);
 
     /*
-      uniswapPool = new ethers.Contract(uniswapPoolAddress, poolJson.abi, deployer);
-      await uniswapPool.increaseObservationCardinalityNext(40);
-
-      // Deployer adds liquidity at current price to Uniswap V3 exchange
-      await weth.approve(uniswapPositionManager.address, ethers.constants.MaxUint256);
-      await token.approve(uniswapPositionManager.address, ethers.constants.MaxUint256);
-      await uniswapPositionManager.mint({
-          token0: weth.address,
-          token1: token.address,
-          tickLower: -60,
-          tickUpper: 60,
-          fee: FEE,
-          recipient: deployer.address,
-          amount0Desired: UNISWAP_INITIAL_WETH_LIQUIDITY,
-          amount1Desired: UNISWAP_INITIAL_TOKEN_LIQUIDITY,
-          amount0Min: 0,
-          amount1Min: 0,
-          deadline: (await ethers.provider.getBlock('latest')).timestamp * 2,
-      }, { gasLimit: 5000000 });
-
-      // Deploy the lending pool
-      lendingPool = await (await ethers.getContractFactory('PuppetV3Pool', deployer)).deploy(
-          weth.address,
-          token.address,
-          uniswapPool.address
-      );
-
-      // Setup initial token balances of lending pool and player
-      await token.transfer(player.address, PLAYER_INITIAL_TOKEN_BALANCE);
-      await token.transfer(lendingPool.address, LENDING_POOL_INITIAL_TOKEN_BALANCE);
-
       // Some time passes
       await time.increase(3 * 24 * 60 * 60); // 3 days in seconds
 
