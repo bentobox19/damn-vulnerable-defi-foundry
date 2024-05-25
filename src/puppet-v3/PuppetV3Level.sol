@@ -17,7 +17,7 @@ interface IWETH {
 }
 
 interface IPuppetV3Pool {
-  // ?
+  function calculateDepositOfWETHRequired(uint256) external view returns (uint256);
 }
 
 // I don't think I'll use this code elsewhere
@@ -83,6 +83,8 @@ contract PuppetV3Level is StdAssertions, StdCheats {
 
   DamnValuableToken internal token;
   IPuppetV3Pool internal lendingPool;
+
+  uint256 internal initialBlockTimestamp;
 
   constructor() {
     string memory RPC_URL = vm.envString("RPC_URL");
@@ -170,26 +172,27 @@ contract PuppetV3Level is StdAssertions, StdCheats {
     token.transfer(playerAddress, PLAYER_INITIAL_TOKEN_BALANCE);
     token.transfer(address(lendingPool), LENDING_POOL_INITIAL_TOKEN_BALANCE);
 
-    /*
-      // Some time passes
-      await time.increase(3 * 24 * 60 * 60); // 3 days in seconds
+    // Some time passes
+    vm.warp(block.timestamp + 3 days);
 
-      // Ensure oracle in lending pool is working as expected. At this point, DVT/WETH price should be 1:1.
-      // To borrow 1 DVT, must deposit 3 ETH
-      expect(
-          await lendingPool.calculateDepositOfWETHRequired(1n * 10n ** 18n)
-      ).to.be.eq(3n * 10n ** 18n);
+    // DEBUG
+    // I need some test in the intermediate steps to verify each part is working.
 
-      // To borrow all DVT in lending pool, user must deposit three times its value
-      expect(
-          await lendingPool.calculateDepositOfWETHRequired(LENDING_POOL_INITIAL_TOKEN_BALANCE)
-      ).to.be.eq(LENDING_POOL_INITIAL_TOKEN_BALANCE * 3n);
 
-      // Ensure player doesn't have that much ETH
-      expect(await ethers.provider.getBalance(player.address)).to.be.lt(LENDING_POOL_INITIAL_TOKEN_BALANCE * 3n);
+    // Ensure oracle in lending pool is working as expected.
+    // At this point, DVT/WETH price should be 1:1.
+    // To borrow 1 DVT, must deposit 3 ETH.
+    // assertEq(lendingPool.calculateDepositOfWETHRequired(1e18), 3e18);
 
-      initialBlockTimestamp = (await ethers.provider.getBlock('latest')).timestamp;
-    */
+    // To borrow all DVT in lending pool, user must deposit three times its value
+    // assertEq(
+    //  lendingPool.calculateDepositOfWETHRequired(LENDING_POOL_INITIAL_TOKEN_BALANCE),
+    //  3 * LENDING_POOL_INITIAL_TOKEN_BALANCE);
+
+    // Ensure player doesn't have that much ETH
+    assertLt(playerAddress.balance, 3 * LENDING_POOL_INITIAL_TOKEN_BALANCE);
+
+    initialBlockTimestamp = block.timestamp;
     vm.stopPrank();
   }
 
